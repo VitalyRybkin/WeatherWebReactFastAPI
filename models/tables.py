@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class TableNames:
+class Tables:
     USERS: str = "users"
     WISHLIST: str = "wishlist"
     SETTINGS: str = "settings"
@@ -10,4 +10,3 @@ class TableNames:
     CURRENT: str = "current"
     DAILY: str = "daily"
     FAVORITES: str = "favorites"
-
