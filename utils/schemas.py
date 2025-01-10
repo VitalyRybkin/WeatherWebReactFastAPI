@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 class UserOut(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    login: EmailStr | None = None
+    login: EmailStr | None | str = None
     bot_id: int | None = None
     bot_name: str | None = None
 

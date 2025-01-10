@@ -9,9 +9,14 @@ from utils import User
 
 async def create_new_user(session, user) -> bool:
     try:
+        print(user)
         insert_new_user: Insert = insert(Users).values(
-            login=user.login, password=user.password
+            login=user.login,
+            password=user.password,
+            bot_id=user.bot_id,
+            bot_name=user.bot_name,
         )
+
         await session.execute(insert_new_user)
         await session.commit()
 
@@ -26,7 +31,8 @@ async def create_new_user(session, user) -> bool:
         await session.execute(insert(Settings).values(acc_id=get_acc_id))
 
         await session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
+        print(e)
         await session.rollback()
         return False
 

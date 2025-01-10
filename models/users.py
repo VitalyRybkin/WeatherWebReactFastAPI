@@ -15,7 +15,7 @@ class Users(AbstractBaseModel):
 
     acc_id = Column(Integer, primary_key=True, autoincrement=True)
     login: Mapped[str] = mapped_column(unique=True)
-    password: Mapped[str] = mapped_column()
+    password: Mapped[str] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now(timezone.utc)
     )

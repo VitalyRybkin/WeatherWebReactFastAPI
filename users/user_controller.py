@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users
@@ -7,9 +9,14 @@ from utils.schemas import User, UserOut, UserLogin
 
 async def create_user(session: AsyncSession, new_user: User) -> UserOut | None:
     user: User = User(**new_user.model_dump())
-    user.password = Users.hash_password(user.password)
-    is_user_created: bool = await create_new_user(session, user)
-    if is_user_created:
+
+    if user.password:
+        user.password = Users.hash_password(user.password)
+    else:
+        user.login = f"{uuid.uuid4()}@bot.com"
+
+    user_created: bool = await create_new_user(session, user)
+    if user_created:
         new_user: UserOut = UserOut(**user.model_dump())
         return new_user
 

@@ -25,14 +25,14 @@ async def create_user(
             status_code=status.HTTP_201_CREATED,
             content={
                 "success": True,
-                "detail": "User created",
+                "detail": "User created.",
                 "user": user_created.model_dump(),
             },
         )
 
     raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
-        detail="User could not be created. User already exists",
+        detail="User could not be created. User already exists.",
     )
 
 
