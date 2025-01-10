@@ -10,4 +10,10 @@ class UserOut(BaseModel):
 
 
 class User(UserOut):
-    password: bytes | None = None
+    password: str | None = None
+
+
+class UserLogin(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    email: EmailStr | None
+    password: str | None

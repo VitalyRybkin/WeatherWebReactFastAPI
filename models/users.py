@@ -33,14 +33,15 @@ class Users(AbstractBaseModel):
     current = relationship("Current", back_populates="parent", uselist=False)
 
     @classmethod
-    def hash_password(cls, password):
+    def hash_password(cls, password: str) -> str:
         salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password, salt)
+        password = password.encode("utf-8")
+        hashed = bcrypt.hashpw(password, salt)
+        return hashed.decode("utf8")
 
-    @staticmethod
     def verify_password(self, password):
-        pwhash = bcrypt.hashpw(password, self.password)
-        return self.password == pwhash
+        pwhash = bcrypt.checkpw(password, self.password.encode("utf-8"))
+        return pwhash
 
     def __repr__(self):
         return (

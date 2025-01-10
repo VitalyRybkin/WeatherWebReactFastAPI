@@ -1,14 +1,16 @@
+from pydantic import EmailStr
 from sqlalchemy import insert, select, Select
 from sqlalchemy.dialects.postgresql import Insert
 from sqlalchemy.exc import IntegrityError
 
 from models import Users, Current, Daily, Hourly, Settings
+from utils import User
 
 
-async def create_new_user(session, user):
+async def create_new_user(session, user) -> bool:
     try:
         insert_new_user: Insert = insert(Users).values(
-            login=user.login, password=user.password.decode("utf-8")
+            login=user.login, password=user.password
         )
         await session.execute(insert_new_user)
         await session.commit()
@@ -29,3 +31,10 @@ async def create_new_user(session, user):
         return False
 
     return True
+
+
+async def get_user_by_login(user_login: EmailStr, session) -> User | None:
+    get_user_info: Select = select(Users).filter(Users.login == user_login)
+    result = await session.execute(get_user_info)
+    user: User = result.scalar()
+    return user if user else None

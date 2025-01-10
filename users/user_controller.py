@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users
-from users.crud import create_new_user
-from utils.schemas import User, UserOut
+from users.crud import create_new_user, get_user_by_login
+from utils.schemas import User, UserOut, UserLogin
 
 
 async def create_user(session: AsyncSession, new_user: User) -> UserOut | None:
@@ -14,3 +14,11 @@ async def create_user(session: AsyncSession, new_user: User) -> UserOut | None:
         return new_user
 
     return None
+
+
+async def user_logging(user: UserLogin, session: AsyncSession) -> bool:
+    user_found: Users | None = await get_user_by_login(user.email, session)
+    if user_found and user_found.verify_password(user.password.encode()):
+        return True
+
+    return False
