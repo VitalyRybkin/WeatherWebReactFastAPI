@@ -1,29 +1,19 @@
-[tool.poetry]
-name = "weatherfastapi"
+[project]
+name = "WeatherWebReactFastAPI"
 version = "0.1.0"
 description = ""
-authors = ["vitaly <vitaly.rybkin@gmail.com>"]
-license = "MIT"
+authors = [
+    {name = "МVitaly Rybkin",email = "vitaly.rybkin@gmail.com"}
+]
 readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi (>=0.115.6,<0.116.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "pydantic[email] (>=2.10.5,<3.0.0)"
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-fastapi = "^0.115.4"
-uvicorn = {extras = ["starndart"], version = "^0.34.0"}
-sqlalchemy = {extras = ["asincio"], version = "^2.0.36"}
-python-dotenv = "^1.0.1"
-asyncpg = "^0.30.0"
-email-validator = "^2.2.0"
-pydantic-core = "2.27.2"
-pydantic-settings = "2.7.1"
-sqlalchemy-json = "^0.7.0"
-bcrypt = "^4.2.1"
-sqlalchemy-utils = "^0.41.2"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
-black = "^24.10.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

@@ -4,12 +4,11 @@ from sqlalchemy.dialects.postgresql import Insert
 from sqlalchemy.exc import IntegrityError
 
 from models import Users, Current, Daily, Hourly, Settings
-from utils import User
+from utils import UserCreate
 
 
 async def create_new_user(session, user) -> bool:
     try:
-        print(user)
         insert_new_user: Insert = insert(Users).values(
             login=user.login,
             password=user.password,
@@ -39,8 +38,13 @@ async def create_new_user(session, user) -> bool:
     return True
 
 
-async def get_user_by_login(user_login: EmailStr, session) -> User | None:
-    get_user_info: Select = select(Users).filter(Users.login == user_login)
+async def get_user(
+    session, user_login: EmailStr = None, bot_name: str = None
+) -> UserCreate | None:
+    if user_login:
+        get_user_info: Select = select(Users).filter(Users.login == user_login)
+    else:
+        get_user_info: Select = select(Users).filter(Users.bot_name == bot_name)
     result = await session.execute(get_user_info)
-    user: User = result.scalar()
+    user: UserCreate = result.scalar()
     return user if user else None

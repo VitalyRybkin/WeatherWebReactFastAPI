@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from pydantic import EmailStr
@@ -5,18 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from users import user_controller
-from users.user_controller import user_logging
-from utils.schemas import User, UserOut, UserLogin
+from users.user_controller import user_logging, linking_accounts
 from utils.db_engine import db_engine
+from utils.schemas import UserCreate, UserLogin
 
 router = APIRouter(prefix="/users")
 
 
 @router.post("/registration/", summary="Register a new user")
 async def create_user(
-    new_user: User, session: AsyncSession = Depends(db_engine.session_dependency)
+    new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
 ) -> JSONResponse:
-    user_created: UserOut | None = await user_controller.create_user(
+    user_created: dict[str, Any] | None = await user_controller.create_user(
         session=session, new_user=new_user
     )
 
@@ -26,7 +28,7 @@ async def create_user(
             content={
                 "success": True,
                 "detail": "User created.",
-                "user": user_created.model_dump(),
+                "user": user_created,
             },
         )
 
@@ -42,8 +44,8 @@ async def login(
     user_password: str,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
-    user: UserLogin = UserLogin(email=user_login, password=user_password)
-    user_logged_in: bool = await user_logging(user=user, session=session)
+    user_logging_in: UserLogin = UserLogin(login=user_login, password=user_password)
+    user_logged_in: bool = await user_logging(user=user_logging_in, session=session)
 
     if user_logged_in:
         return JSONResponse(
@@ -57,3 +59,27 @@ async def login(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Incorrect username or password",
     )
+
+
+@router.patch("/link/", summary="Login with e-mail and password")
+async def link_account(
+    user_login: EmailStr,
+    bot_name: str,
+    session: AsyncSession = Depends(db_engine.session_dependency),
+) -> JSONResponse:
+    account_linked: bool = await linking_accounts(
+        user_login=user_login, bot_name=bot_name, session=session
+    )
+    if account_linked:
+        return JSONResponse(content={"success": True, "detail": "Account linked"})
+    raise HTTPException(
+        status_code=status.HTTP_204_NO_CONTENT,
+        detail="Account could not be linked. Bot user not found.",
+    )
+
+
+@router.post("/logout", summary="Logout")
+async def logout(
+    user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
+):
+    return user
