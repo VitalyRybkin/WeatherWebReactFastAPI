@@ -28,11 +28,11 @@ async def create_user(
         return {"error": user_created}
 
 
-async def user_logging(user: UserLogin, session: AsyncSession) -> bool:
+async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
     user_found: Users | None = await get_user(session, user_login=user.login)
     if user_found and user_found.verify_password(user.password.encode()):
-        return True
-    return False
+        return user_found
+    return None
 
 
 async def linking_accounts(

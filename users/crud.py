@@ -1,10 +1,8 @@
 from pydantic import EmailStr
 from sqlalchemy import insert, select, Select, Result, exc
-from sqlalchemy.dialects.postgresql import Insert
 from sqlalchemy.exc import IntegrityError, InterfaceError
 
 from models import Users, Current, Daily, Hourly, Settings
-from utils import UserCreate
 
 
 async def create_new_user(session, user) -> IntegrityError | InterfaceError | Users:
@@ -34,13 +32,13 @@ async def create_new_user(session, user) -> IntegrityError | InterfaceError | Us
 
 async def get_user(
     session, user_login: EmailStr = None, bot_name: str = None
-) -> UserCreate | None:
+) -> Users | None:
     if user_login:
         get_user_info: Select = select(Users).filter(Users.login == user_login)
     else:
         get_user_info: Select = select(Users).filter(Users.bot_name == bot_name)
 
-    result = await session.execute(get_user_info)
-    user: UserCreate = result.scalar()
+    result: Result = await session.execute(get_user_info)
+    user_info: Users = result.scalar()
 
-    return user if user else None
+    return user_info if user_info else None

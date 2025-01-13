@@ -58,7 +58,10 @@ async def login(
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
     user_logging_in: UserLogin = UserLogin(login=user_login, password=user_password)
-    user_logged_in: bool = await user_logging(user=user_logging_in, session=session)
+
+    user_logged_in: Users | None = await user_logging(
+        user=user_logging_in, session=session
+    )
 
     if user_logged_in:
         return JSONResponse(
@@ -66,11 +69,16 @@ async def login(
             content={
                 "success": True,
                 "detail": "User logged in",
+                "user": {
+                    "id": user_logged_in.id,
+                    "login": user_logged_in.login,
+                },
             },
         )
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect username or password",
+        detail="Incorrect username or password.",
     )
 
 
@@ -89,10 +97,3 @@ async def link_account(
         status_code=status.HTTP_204_NO_CONTENT,
         detail="Account could not be linked. Bot user not found.",
     )
-
-
-@router.post("/logout", summary="Logout")
-async def logout(
-    user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
-):
-    return user
