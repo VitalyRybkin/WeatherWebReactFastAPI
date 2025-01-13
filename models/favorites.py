@@ -10,10 +10,10 @@ class Favorites(AbstractBaseModel):
 
     users = Tables.USERS
 
-    favorites_id = Column(Integer, primary_key=True, autoincrement=True)
+    # favorites_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
-            f"{users}.acc_id",
+            f"{users}.id",
             onupdate="CASCADE",
             ondelete="CASCADE",
         ),
@@ -35,7 +35,7 @@ class Favorites(AbstractBaseModel):
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            f"favorites_id={self.favorites_id}, "
+            # f"favorites_id={self.favorites_id}, "
             f"acc_id={self.acc_id}, "
             f"loc_id={self.loc_id}, "
             f"loc_name={self.loc_name}, "

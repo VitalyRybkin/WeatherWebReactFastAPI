@@ -10,10 +10,10 @@ class Settings(AbstractBaseModel):
 
     users = Tables.USERS
 
-    set_id = Column(Integer, primary_key=True, autoincrement=True)
+    # set_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
-            f"{users}.acc_id",
+            f"{users}.id",
             onupdate="CASCADE",
             ondelete="CASCADE",
         ),
@@ -34,7 +34,7 @@ class Settings(AbstractBaseModel):
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            f"set_id={self.set_id},"
+            # f"set_id={self.set_id},"
             f"acc_id={self.acc_id},"
             f"current={self.current},"
             f"daily={self.daily},"

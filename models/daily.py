@@ -10,10 +10,10 @@ class Daily(AbstractBaseModel):
 
     users = Tables.USERS
 
-    daily_id = Column(Integer, primary_key=True, autoincrement=True)
+    # daily_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
-            f"{users}.acc_id",
+            f"{users}.id",
             ondelete="CASCADE",
             onupdate="CASCADE",
         ),
@@ -34,7 +34,7 @@ class Daily(AbstractBaseModel):
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            f"daily_id={self.daily_id}, "
+            # f"daily_id={self.daily_id}, "
             f"astro={self.astro}, "
             f"visibility={self.visibility}, "
             f"humidity={self.humidity}, "

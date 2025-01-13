@@ -10,10 +10,10 @@ class Current(AbstractBaseModel):
 
     users = Tables.USERS
 
-    current_id = Column(Integer, primary_key=True, autoincrement=True)
+    # current_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
-            f"{users}.acc_id",
+            f"{users}.id",
             ondelete="CASCADE",
             onupdate="CASCADE",
         ),
@@ -35,7 +35,7 @@ class Current(AbstractBaseModel):
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            f"current_id={self.current_id}, "
+            # f"current_id={self.current_id}, "
             f"acc_id={self.acc_id}, "
             f"wind_extended={self.wind_extended}, "
             f"pressure={self.pressure}, "

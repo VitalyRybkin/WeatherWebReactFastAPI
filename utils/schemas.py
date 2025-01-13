@@ -12,14 +12,17 @@ class UserPassword(BaseModel):
     password: Annotated[str, MinLen(5), MaxLen(15)] | None = None
 
 
-class UserPublic(UserBase):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class UserTelegram(BaseModel):
     bot_id: int | None = None
     bot_name: str | None = None
 
 
-class UserCreate(UserPublic, UserPassword):
+class UserPublic(UserBase, UserTelegram):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    id: int
+
+
+class UserCreate(UserBase, UserPassword, UserTelegram):
     pass
 
 

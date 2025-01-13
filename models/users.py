@@ -13,7 +13,7 @@ from .tables import Tables
 class Users(AbstractBaseModel):
     __tablename__ = Tables.USERS
 
-    acc_id = Column(Integer, primary_key=True, autoincrement=True)
+    # acc_id = Column(Integer, primary_key=True, autoincrement=True)
     login: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -46,7 +46,7 @@ class Users(AbstractBaseModel):
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            f"acc_id={self.acc_id}, "
+            f"acc_id={self.id}, "
             f"login={self.login}, "
             f"password={self.password}, "
             f"created_at={self.created_at}, "

@@ -1,11 +1,12 @@
-from typing import Any
+from typing import Type
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
-
+from sqlalchemy.exc import InterfaceError, IntegrityError
+from models import Users
 from users import user_controller
 from users.user_controller import user_logging, linking_accounts
 from utils.db_engine import db_engine
@@ -18,24 +19,36 @@ router = APIRouter(prefix="/users")
 async def create_user(
     new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
 ) -> JSONResponse:
-    user_created: dict[str, Any] | None = await user_controller.create_user(
-        session=session, new_user=new_user
+    user_created: Users | dict[str, IntegrityError | InterfaceError] = (
+        await user_controller.create_user(session=session, new_user=new_user)
     )
 
-    if user_created:
+    if type(user_created) is Users:
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content={
                 "success": True,
                 "detail": "User created.",
-                "user": user_created,
+                "user": {
+                    "id": user_created.id,
+                    "login": user_created.login,
+                    "bot_id": user_created.bot_id,
+                    "bot_name": user_created.bot_name,
+                },
             },
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="User could not be created. User already exists.",
-    )
+    if type(user_created["error"]) is IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User could not be created. User already exists.",
+        )
+
+    if type(user_created["error"]) is InterfaceError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error. User could not be created.",
+        )
 
 
 @router.get("/login/", summary="User login with e-mail and password")

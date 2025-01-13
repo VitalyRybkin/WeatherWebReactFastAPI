@@ -1,41 +1,35 @@
 from pydantic import EmailStr
-from sqlalchemy import insert, select, Select
+from sqlalchemy import insert, select, Select, Result, exc
 from sqlalchemy.dialects.postgresql import Insert
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InterfaceError
 
 from models import Users, Current, Daily, Hourly, Settings
 from utils import UserCreate
 
 
-async def create_new_user(session, user) -> bool:
+async def create_new_user(session, user) -> IntegrityError | InterfaceError | Users:
     try:
-        insert_new_user: Insert = insert(Users).values(
-            login=user.login,
-            password=user.password,
-            bot_id=user.bot_id,
-            bot_name=user.bot_name,
-        )
-
-        await session.execute(insert_new_user)
+        user = Users(**user.model_dump())
+        session.add(user)
         await session.commit()
 
-        select_acc_id: Select = select(Users.acc_id).filter(Users.login == user.login)
-        result = await session.execute(select_acc_id)
-
-        get_acc_id: int = result.scalar()
-
-        await session.execute(insert(Current).values(acc_id=get_acc_id))
-        await session.execute(insert(Daily).values(acc_id=get_acc_id))
-        await session.execute(insert(Hourly).values(acc_id=get_acc_id))
-        await session.execute(insert(Settings).values(acc_id=get_acc_id))
-
+        await session.execute(insert(Current).values(acc_id=user.id))
+        await session.execute(insert(Daily).values(acc_id=user.id))
+        await session.execute(insert(Hourly).values(acc_id=user.id))
+        await session.execute(insert(Settings).values(acc_id=user.id))
         await session.commit()
+
     except IntegrityError as e:
         print(e)
         await session.rollback()
-        return False
+        return e
 
-    return True
+    except exc.InterfaceError as e:
+        print(e)
+        await session.rollback()
+        return e
+
+    return user
 
 
 async def get_user(
@@ -45,6 +39,8 @@ async def get_user(
         get_user_info: Select = select(Users).filter(Users.login == user_login)
     else:
         get_user_info: Select = select(Users).filter(Users.bot_name == bot_name)
+
     result = await session.execute(get_user_info)
     user: UserCreate = result.scalar()
+
     return user if user else None
