@@ -28,3 +28,7 @@ class UserCreate(UserBase, UserPassword, UserTelegram):
 
 class UserLogin(UserBase, UserPassword):
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class UserAccountsLink(UserBase, UserTelegram):
+    pass

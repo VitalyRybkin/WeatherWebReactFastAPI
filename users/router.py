@@ -1,16 +1,15 @@
-from typing import Type
-
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from pydantic import EmailStr
+from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
-from sqlalchemy.exc import InterfaceError, IntegrityError
+
 from models import Users
 from users import user_controller
 from users.user_controller import user_logging, linking_accounts
 from utils.db_engine import db_engine
-from utils.schemas import UserCreate, UserLogin
+from utils.schemas import UserCreate, UserLogin, UserAccountsLink
 
 router = APIRouter(prefix="/users")
 
@@ -84,13 +83,12 @@ async def login(
 
 @router.patch("/link/", summary="Login with e-mail and password")
 async def link_account(
-    user_login: EmailStr,
-    bot_name: str,
+    user_link_info: UserAccountsLink,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
-    account_linked: bool = await linking_accounts(
-        user_login=user_login, bot_name=bot_name, session=session
-    )
+
+    account_linked: bool = await linking_accounts(user=user_link_info, session=session)
+
     if account_linked:
         return JSONResponse(content={"success": True, "detail": "Account linked"})
     raise HTTPException(
