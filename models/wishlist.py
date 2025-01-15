@@ -40,7 +40,6 @@ class Wishlist(AbstractBaseModel):
         f"{users.title()}",
         back_populates="users",
         cascade="all, delete",
-        lazy="joined",
     )
 
     def __repr__(self):

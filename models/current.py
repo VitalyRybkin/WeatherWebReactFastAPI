@@ -43,7 +43,6 @@ class Current(AbstractBaseModel):
         back_populates="current",
         single_parent=True,
         cascade="all, delete",
-        lazy="joined",
     )
 
     def __repr__(self):

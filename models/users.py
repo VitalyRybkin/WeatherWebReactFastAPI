@@ -46,12 +46,12 @@ class Users(AbstractBaseModel):
     dark_theme: Mapped[bool] = mapped_column(default=False)
     alert = Column(mutable_json_type(dbtype=JSONB))
 
-    users = relationship("Wishlist", back_populates="parent", uselist=True)
-    favorites = relationship("Favorites", back_populates="parent", uselist=False)
-    settings = relationship("Settings", back_populates="parent", uselist=False)
-    hourly = relationship("Hourly", back_populates="parent", uselist=False)
-    daily = relationship("Daily", back_populates="parent", uselist=False)
-    current = relationship("Current", back_populates="parent", uselist=False)
+    users = relationship("Wishlist", back_populates="parent", uselist=True, lazy="joined")
+    favorites = relationship("Favorites", back_populates="parent", uselist=False, lazy="joined")
+    settings = relationship("Settings", back_populates="parent", uselist=False, lazy="joined")
+    hourly = relationship("Hourly", back_populates="parent", uselist=False, lazy="joined")
+    daily = relationship("Daily", back_populates="parent", uselist=False, lazy="joined")
+    current = relationship("Current", back_populates="parent", uselist=False, lazy="joined")
 
     @classmethod
     def hash_password(cls, password: str) -> str:

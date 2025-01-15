@@ -40,7 +40,6 @@ class Daily(AbstractBaseModel):
         back_populates="daily",
         single_parent=True,
         cascade="all, delete",
-        lazy="joined",
     )
 
     def __repr__(self):
