@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from models import AbstractBaseModel
@@ -6,11 +6,23 @@ from models.tables import Tables
 
 
 class Daily(AbstractBaseModel):
+    """
+    SQLAlchemy model for Daily weather display settings
+    Attributes
+    ----------
+    acc_id: int
+        user account ID
+    astro: bool
+        astro forecast display (default=False)
+    visibility: bool
+        visibility forecast display (default=False)
+    humidity: bool
+        humidity forecast display (default=False)
+    """
     __tablename__ = Tables.DAILY
 
     users = Tables.USERS
 
-    # daily_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
             f"{users}.id",

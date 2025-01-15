@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, Column, ForeignKey
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models import AbstractBaseModel
@@ -6,11 +6,23 @@ from models.tables import Tables
 
 
 class Hourly(AbstractBaseModel):
+    """
+    SQLAlchemy Hourly Model for hourly weather display settings
+    Attributes
+    ----------
+    wind_extended: bool
+        wind extended forecast display (default=False)
+    pressure: bool
+        pressure forecast display (default=False)
+    visibility: bool
+        visibility forecast display(default=False)
+    humidity: bool
+        humidity forecast display(default=False)
+    """
     __tablename__ = Tables.HOURLY
 
     users = Tables.USERS
 
-    # hourly_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
             f"{users}.id",

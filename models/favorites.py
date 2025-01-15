@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import AbstractBaseModel
@@ -6,11 +6,23 @@ from .tables import Tables
 
 
 class Favorites(AbstractBaseModel):
+    """
+    SQLAlchemy model for user favorite location
+    Attributes
+    ----------
+    loc_id: int
+        user favorite location ID (nullable=False)
+    loc_name: str
+        user favorite location name (String(100), nullable=False)
+    loc_region: str
+        user favorite location region (String(100), nullable=False)
+    loc_country: str
+        user favorite location country (String(100), nullable=False)
+    """
     __tablename__ = Tables.FAVORITES
 
     users = Tables.USERS
 
-    # favorites_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
             f"{users}.id",

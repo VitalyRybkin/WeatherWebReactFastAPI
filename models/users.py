@@ -11,6 +11,28 @@ from .tables import Tables
 
 
 class Users(AbstractBaseModel):
+    """
+    SQLAlchemy model for storing user information.
+    Attributes
+    ----------
+    login: string
+        unique user login (email, not nullable).
+    password: string
+        hashed user password.
+    created_at: datetime
+        date account was created (default value).
+    deleted: bool
+        currant or deleted (default value).
+    bot_id: int
+        user bot id (default value).
+    bot_name: str
+        user bot nickname.
+    dark_theme: bool
+        user web interface theme (default value).
+    alert: mutable_json_type(dbtype=JSONB)
+        alert schedule jsonb (default value).
+    """
+
     __tablename__ = Tables.USERS
 
     login: Mapped[str] = mapped_column(unique=True)
@@ -33,16 +55,26 @@ class Users(AbstractBaseModel):
 
     @classmethod
     def hash_password(cls, password: str) -> str:
+        """
+        Function to hash user's password.
+        :param password: string password to hash.
+        :return: string password hash.
+        """
         salt = bcrypt.gensalt()
         password = password.encode("utf-8")
         hashed = bcrypt.hashpw(password, salt)
         return hashed.decode("utf8")
 
-    def verify_password(self, password):
-        pwhash = bcrypt.checkpw(password, self.password.encode("utf-8"))
+    def verify_password(self, password: bytes):
+        """
+        Function to verify user's password.
+        :param password: bytes password to verify.
+        :return: whether password matches.
+        """
+        pwhash: bool = bcrypt.checkpw(password, self.password.encode("utf-8"))
         return pwhash
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<{self.__class__.__name__}("
             f"acc_id={self.id}, "

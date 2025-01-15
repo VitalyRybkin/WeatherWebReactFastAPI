@@ -18,6 +18,13 @@ router = APIRouter(prefix="/users")
 async def create_user(
     new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
 ) -> JSONResponse:
+    """
+    Function (POST-request). Creates a new user.
+    :param new_user: login (an email address), password, bot_id, bot_name
+    :param session: AsyncSession
+    :return: whether the user was successfully created or not (HTTP error)
+    """
+
     user_created: Users | dict[str, IntegrityError | InterfaceError] = (
         await user_controller.create_user(session=session, new_user=new_user)
     )
@@ -56,6 +63,14 @@ async def login(
     user_password: str,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
+    """
+    Function (GET-request). Logs a user in.
+    :param user_login: user login (an email address)
+    :param user_password: user password
+    :param session: AsyncSession
+    :return: whether the user was successfully logged in or not (HTTP error)
+    """
+
     user_logging_in: UserLogin = UserLogin(login=user_login, password=user_password)
 
     user_logged_in: Users | None = await user_logging(
@@ -86,11 +101,17 @@ async def link_account(
     user_link_info: UserAccountsLink,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
+    """
+    Function (PATCH-request). Links web and telegram accounts.
+    :param user_link_info: login (an email address) and bot_name
+    :param session: AsyncSession
+    :return: whether the user's accounts were successfully linked or not (HTTP error)
+    """
 
     account_linked: bool = await linking_accounts(user=user_link_info, session=session)
 
     if account_linked:
-        return JSONResponse(content={"success": True, "detail": "Account linked"})
+        return JSONResponse(content={"success": True, "detail": "Accounts linked."})
     raise HTTPException(
         status_code=status.HTTP_204_NO_CONTENT,
         detail="Account could not be linked. Bot user not found.",

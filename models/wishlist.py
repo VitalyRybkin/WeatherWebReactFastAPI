@@ -6,11 +6,24 @@ from .tables import Tables
 
 
 class Wishlist(AbstractBaseModel):
+    """
+    SQLAlchemy model for storing user'sWishlist.
+    Attributes
+    ----------
+    loc_id: int
+        favorite location ID.
+    loc_name: str
+        favorite location name.
+    loc_region: str
+        favorite location region.
+    loc_country: str
+        favorite location country.
+
+    """
     __tablename__ = Tables.WISHLIST
 
     users = Tables.USERS
 
-    # wishlist_id = Column(Integer, primary_key=True, autoincrement=True)
     acc_id: Mapped[int] = mapped_column(
         ForeignKey(
             f"{users}.id",
