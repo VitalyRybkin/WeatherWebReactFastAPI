@@ -44,13 +44,13 @@ async def create_user(
             },
         )
 
-    if type(user_created["error"]) is IntegrityError:
+    if type(user_created) is IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User could not be created. User already exists.",
         )
 
-    if type(user_created["error"]) is InterfaceError:
+    if type(user_created) is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error. User could not be created.",

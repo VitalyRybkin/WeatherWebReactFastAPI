@@ -26,12 +26,11 @@ async def create_user(
     user_created: IntegrityError | InterfaceError | Users = await create_new_user(
         session, new_user
     )
-    if type(user_created) is Users:
-        return user_created
-    else:
-        await session.rollback()
-        return {"error": user_created}
 
+    if type(user_created) is not Users:
+        await session.rollback()
+
+    return user_created
 
 async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
     """
