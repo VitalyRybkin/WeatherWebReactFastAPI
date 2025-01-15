@@ -55,28 +55,30 @@ async def get_user(
 
 @handling_interface_error
 async def link_user_accounts(
-    web_user_found: Users, session: AsyncSession
+    web_user_found: Users, bot_user_found: Users, session: AsyncSession
 ) -> Users | InterfaceError:
     """
-    Function. Updates user accounts - adding bot account to web account.
-    :param web_user_found: user info to update.
+    Function. Updates user accounts - adding bot account to web account. Deletes user's bot-only account.
+    :param bot_user_found: bot user info to delete
+    :param web_user_found: web user info to update.
     :param session: SQLAlchemy session.
     :return: user info if successful or an error.
     """
     session.add(web_user_found)
+    await session.execute(delete(Users).where(Users.id == bot_user_found.id))
     await session.commit()
     # TODO make return universal
     return web_user_found
 
 
-@handling_interface_error
-async def delete_user(session, acc_id: int) -> None:
-    """
-    Function. Deletes a user from the database by account ID.
-    :param session: SQLAlchemy session.
-    :param acc_id: account ID
-    :return: None
-    """
-
-    await session.execute(delete(Users).where(Users.id == acc_id))
-    await session.commit()
+# @handling_interface_error
+# async def delete_user(session, acc_id: int) -> None:
+#     """
+#     Function. Deletes a user from the database by account ID.
+#     :param session: SQLAlchemy session.
+#     :param acc_id: account ID
+#     :return: None
+#     """
+#
+#     await session.execute(delete(Users).where(Users.id == acc_id))
+#     await session.commit()

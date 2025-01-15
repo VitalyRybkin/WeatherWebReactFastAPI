@@ -4,7 +4,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users
-from users.crud import create_new_user, get_user, link_user_accounts, delete_user
+from users.crud import create_new_user, get_user, link_user_accounts
 from utils.schemas import UserCreate, UserLogin, UserAccountsLink
 
 
@@ -65,9 +65,9 @@ async def linking_accounts(
     web_user_found.bot_name = bot_user_found.bot_name
 
     accounts_linked: Users | InterfaceError = await link_user_accounts(
-        web_user_found, session
+        web_user_found, bot_user_found, session
     )
-    await delete_user(session, bot_user_found.id)
+    # await delete_user(session, bot_user_found.id)
     await session.refresh(web_user_found)
 
     return web_user_found if type(accounts_linked) is Users else None
