@@ -7,7 +7,8 @@ def to_json(table):
     """
     Function. Convert table to json
     """
-    return {col.name: getattr(table, col.name) for col in table.__table__.columns}
+    if table:
+        return {col.name: getattr(table, col.name) for col in table.__table__.columns if col.name not in ["id", "acc_id"]}
 
 
 def handling_integrity_error(func):

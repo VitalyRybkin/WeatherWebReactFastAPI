@@ -8,6 +8,7 @@ from starlette.responses import JSONResponse
 from models import Users
 from users import user_controller
 from users.user_controller import user_logging, linking_accounts
+from utils import to_json
 from utils.db_engine import db_engine
 from utils.schemas import UserCreate, UserLogin, UserAccountsLink
 
@@ -78,6 +79,14 @@ async def login(
     )
 
     if user_logged_in:
+        settings = to_json(user_logged_in.settings)
+        daily = to_json(user_logged_in.daily)
+        current = to_json(user_logged_in.current)
+        hourly = to_json(user_logged_in.hourly)
+        favorite = to_json(user_logged_in.favorites)
+        wishlist: list = [to_json(item) for item in user_logged_in.users]
+
+
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -86,7 +95,15 @@ async def login(
                 "user": {
                     "id": user_logged_in.id,
                     "login": user_logged_in.login,
+                    "dark_theme": user_logged_in.dark_theme,
+                    "alert": user_logged_in.alert,
                 },
+                "settings": settings,
+                "favorite": favorite,
+                "wishlist": wishlist,
+                "current": current,
+                "hourly": hourly,
+                "daily": daily,
             },
         )
 
