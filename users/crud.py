@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError, InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users, Current, Daily, Hourly, Settings
+from utils.schemas import UserChangePassword
 from utils.utils import handling_integrity_error, handling_interface_error
 
 
@@ -71,14 +72,17 @@ async def link_user_accounts(
     return web_user_found
 
 
-# @handling_interface_error
-# async def delete_user(session, acc_id: int) -> None:
-#     """
-#     Function. Deletes a user from the database by account ID.
-#     :param session: SQLAlchemy session.
-#     :param acc_id: account ID
-#     :return: None
-#     """
-#
-#     await session.execute(delete(Users).where(Users.id == acc_id))
-#     await session.commit()
+@handling_interface_error
+async def change_user_password(user_with_new_password: Users, session: AsyncSession) -> UserChangePassword | InterfaceError:
+    """
+    Function. Deletes a user from the database by account ID.
+    :param user_with_new_password:
+    :param session: SQLAlchemy session.
+    :return: None
+    """
+
+    session.add(user_with_new_password)
+    await session.commit()
+
+    await session.refresh(user_with_new_password)
+    return user_with_new_password

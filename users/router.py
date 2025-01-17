@@ -7,10 +7,10 @@ from starlette.responses import JSONResponse
 
 from models import Users
 from users import user_controller
-from users.user_controller import user_logging, linking_accounts
+from users.user_controller import user_logging, linking_accounts, change_password
 from utils import to_json
 from utils.db_engine import db_engine
-from utils.schemas import UserCreate, UserLogin, UserAccountsLink
+from utils.schemas import UserCreate, UserLogin, UserAccountsLink, UserChangePassword
 
 router = APIRouter(prefix="/users")
 
@@ -20,7 +20,7 @@ async def create_user(
     new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
 ) -> JSONResponse:
     """
-    Function (POST-request). Creates a new user.
+    Function. Creates a new user.
     :param new_user: login (an email address), password, bot_id, bot_name
     :param session: AsyncSession
     :return: whether the user was successfully created or not (HTTP error)
@@ -65,7 +65,7 @@ async def login(
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
     """
-    Function (GET-request). Logs a user in.
+    Function. Logs a user in.
     :param user_login: user login (an email address)
     :param user_password: user password
     :param session: AsyncSession
@@ -119,7 +119,7 @@ async def link_account(
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
     """
-    Function (PATCH-request). Links web and telegram accounts.
+    Function. Links web and telegram accounts.
     :param user_link_info: login (an email address) and bot_name
     :param session: AsyncSession
     :return: whether the user's accounts were successfully linked or not (HTTP error)
@@ -128,8 +128,46 @@ async def link_account(
     account_linked: bool = await linking_accounts(user=user_link_info, session=session)
 
     if account_linked:
-        return JSONResponse(content={"success": True, "detail": "Accounts linked."})
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"success": True, "detail": "Accounts linked."})
+
     raise HTTPException(
         status_code=status.HTTP_204_NO_CONTENT,
         detail="Account could not be linked. Bot user not found.",
+    )
+
+@router.patch("/change_password/", summary="Change user password", description="Changes user password with login, password, new password")
+async def update_user_password(user: UserChangePassword, session: AsyncSession = Depends(db_engine.session_dependency)):
+    """
+    Function. Changes user password.
+    :param user: login, password, new password
+    :param session: SQLAlchemy session
+    :return: whether the user password was successfully updated or not (HTTP error)
+    """
+    user_password_changed: Users | InterfaceError | None = await change_password(user=user, session=session)
+
+    if type(user_password_changed) is Users:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "detail": "User password changed.",
+            }
+        )
+
+    if user_password_changed is None:
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"detail": "Incorrect password."},
+        )
+    if type(user_password_changed) is InterfaceError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error. User password could not be changed.",
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_404_BAD_REQUEST,
+        detail="Something went wrong.",
     )

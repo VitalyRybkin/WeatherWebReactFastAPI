@@ -71,3 +71,9 @@ class UserAccountsLink(UserBase, UserTelegram):
     Pydentic model for user accounts link
     """
     pass
+
+class UserChangePassword(UserBase, UserPassword):
+    """
+    Pydentic model for user change password
+    """
+    new_password: Annotated[str, MinLen(5), MaxLen(15)] | None = None

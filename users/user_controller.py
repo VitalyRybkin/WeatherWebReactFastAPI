@@ -4,8 +4,8 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users
-from users.crud import create_new_user, get_user, link_user_accounts
-from utils.schemas import UserCreate, UserLogin, UserAccountsLink
+from users.crud import create_new_user, get_user, link_user_accounts, change_user_password
+from utils.schemas import UserCreate, UserLogin, UserAccountsLink, UserChangePassword
 
 
 async def create_user(
@@ -70,3 +70,13 @@ async def linking_accounts(
     await session.refresh(web_user_found)
 
     return web_user_found if type(accounts_linked) is Users else None
+
+async def change_password(user: UserChangePassword, session: AsyncSession) -> None | Users | InterfaceError:
+    user_found: Users | InterfaceError | None = await get_user(session, user_login=user.login)
+    if type(user_found) is Users and user_found.verify_password(user.password.encode()):
+        user_found.password = Users.hash_password(user.new_password)
+        await change_user_password(user_found, session)
+    else:
+        return None
+
+    return user_found
