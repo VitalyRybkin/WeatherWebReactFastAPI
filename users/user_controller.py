@@ -4,13 +4,18 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users
-from users.crud import create_new_user, get_user, link_user_accounts, change_user_password
+from users.crud import (
+    create_new_user,
+    get_user,
+    link_user_accounts,
+    change_user_password,
+)
 from utils.schemas import UserCreate, UserLogin, UserAccountsLink, UserChangePassword
 
 
 async def create_user(
     session: AsyncSession, new_user: UserCreate
-) -> Users | dict[str, IntegrityError | InterfaceError]:
+) -> Users | IntegrityError | InterfaceError:
     """
     Function. Handling creation of a new user or an error on existing one.
     :param session: AsyncSession
@@ -32,6 +37,7 @@ async def create_user(
 
     return user_created
 
+
 async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
     """
     Function. Handling user logging in.
@@ -40,15 +46,22 @@ async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
     :return: whether user was logged in or an error on incorrect login or password
     """
 
-    user_found: Users | None = await get_user(session, user_login=user.login)
-    if user_found and user_found.verify_password(user.password.encode()):
+    user_found: Users | InterfaceError | None = await get_user(
+        session, user_login=user.login
+    )
+    if (
+        type(user_found) is Users
+        and user_found.verify_password(user.password.encode())
+        or type(user_found) is InterfaceError
+    ):
         return user_found
+
     return None
 
 
 async def linking_accounts(
     user: UserAccountsLink, session: AsyncSession
-) -> bool | Users | None:
+) -> Users | None:
     """
     Function. Handling of user's accounts linkage.'
     :param user: user accounts information (login, bot_name)
@@ -56,27 +69,36 @@ async def linking_accounts(
     :return: whether user's accounts were linked or an error on linking accounts
     """
 
-    web_user_found: Users | None = await get_user(session, user_login=user.login)
-    bot_user_found: Users | None = await get_user(session, bot_name=user.bot_name)
-    if not bot_user_found:
-        return False
-    web_user_found.bot_id = bot_user_found.bot_id
-    web_user_found.bot_name = bot_user_found.bot_name
-
-    accounts_linked: Users | InterfaceError = await link_user_accounts(
-        web_user_found, bot_user_found, session
+    web_user_found: Users | InterfaceError | None = await get_user(
+        session, user_login=user.login
     )
-    # await delete_user(session, bot_user_found.id)
-    await session.refresh(web_user_found)
+    bot_user_found: Users | InterfaceError | None = await get_user(
+        session, bot_name=user.bot_name
+    )
 
-    return web_user_found if type(accounts_linked) is Users else None
-
-async def change_password(user: UserChangePassword, session: AsyncSession) -> None | Users | InterfaceError:
-    user_found: Users | InterfaceError | None = await get_user(session, user_login=user.login)
-    if type(user_found) is Users and user_found.verify_password(user.password.encode()):
-        user_found.password = Users.hash_password(user.new_password)
-        await change_user_password(user_found, session)
-    else:
+    if not bot_user_found:
         return None
 
-    return user_found
+    if type(bot_user_found) is Users and type(web_user_found) is Users:
+        web_user_found.bot_id = bot_user_found.bot_id
+        web_user_found.bot_name = bot_user_found.bot_name
+
+        web_user_found: Users | InterfaceError = await link_user_accounts(
+            web_user_found, bot_user_found, session
+        )
+
+    return web_user_found
+
+
+async def change_password(
+    user: UserChangePassword, session: AsyncSession
+) -> None | Users | InterfaceError:
+    user_found: Users | InterfaceError | None = await get_user(
+        session, user_login=user.login
+    )
+
+    if type(user_found) is Users and user_found.verify_password(user.password.encode()):
+        user_found.password = Users.hash_password(user.new_password)
+        return await change_user_password(user_found, session)
+    else:
+        return None

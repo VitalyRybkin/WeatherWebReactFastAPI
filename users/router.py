@@ -26,7 +26,7 @@ async def create_user(
     :return: whether the user was successfully created or not (HTTP error)
     """
 
-    user_created: Users | dict[str, IntegrityError | InterfaceError] = (
+    user_created: Users | IntegrityError | InterfaceError = (
         await user_controller.create_user(session=session, new_user=new_user)
     )
 
@@ -57,6 +57,11 @@ async def create_user(
             detail="Database connection error. User could not be created.",
         )
 
+    raise HTTPException(
+        status_code=status.HTTP_404_BAD_REQUEST,
+        detail="Something went wrong.",
+    )
+
 
 @router.get("/login/", summary="User login with e-mail and password")
 async def login(
@@ -74,18 +79,17 @@ async def login(
 
     user_logging_in: UserLogin = UserLogin(login=user_login, password=user_password)
 
-    user_logged_in: Users | None = await user_logging(
+    user_logged_in: Users | InterfaceError | None = await user_logging(
         user=user_logging_in, session=session
     )
 
-    if user_logged_in:
+    if type(user_logged_in) is Users:
         settings = to_json(user_logged_in.settings)
         daily = to_json(user_logged_in.daily)
         current = to_json(user_logged_in.current)
         hourly = to_json(user_logged_in.hourly)
         favorite = to_json(user_logged_in.favorites)
         wishlist: list = [to_json(item) for item in user_logged_in.users]
-
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -107,9 +111,21 @@ async def login(
             },
         )
 
+    if type(user_logged_in) is InterfaceError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error. User could not be logged in.",
+        )
+
+    if not user_logged_in:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password.",
+        )
+
     raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect username or password.",
+        status_code=status.HTTP_404_BAD_REQUEST,
+        detail="Something went wrong.",
     )
 
 
@@ -125,27 +141,46 @@ async def link_account(
     :return: whether the user's accounts were successfully linked or not (HTTP error)
     """
 
-    account_linked: bool = await linking_accounts(user=user_link_info, session=session)
+    account_linked: Users | None = await linking_accounts(
+        user=user_link_info, session=session
+    )
 
     if account_linked:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"success": True, "detail": "Accounts linked."})
+            content={"success": True, "detail": "Accounts linked."},
+        )
+
+    if not account_linked:
+        raise HTTPException(
+            status_code=status.HTTP_204_NO_CONTENT,
+            detail="Account could not be linked. Bot user not found.",
+        )
 
     raise HTTPException(
-        status_code=status.HTTP_204_NO_CONTENT,
-        detail="Account could not be linked. Bot user not found.",
+        status_code=status.HTTP_404_BAD_REQUEST,
+        detail="Something went wrong.",
     )
 
-@router.patch("/change_password/", summary="Change user password", description="Changes user password with login, password, new password")
-async def update_user_password(user: UserChangePassword, session: AsyncSession = Depends(db_engine.session_dependency)):
+
+@router.patch(
+    "/change_password/",
+    summary="Change user password",
+    description="Changes user password with login, password, new password",
+)
+async def update_user_password(
+    user: UserChangePassword,
+    session: AsyncSession = Depends(db_engine.session_dependency),
+):
     """
     Function. Changes user password.
     :param user: login, password, new password
     :param session: SQLAlchemy session
     :return: whether the user password was successfully updated or not (HTTP error)
     """
-    user_password_changed: Users | InterfaceError | None = await change_password(user=user, session=session)
+    user_password_changed: Users | InterfaceError | None = await change_password(
+        user=user, session=session
+    )
 
     if type(user_password_changed) is Users:
         return JSONResponse(
@@ -153,7 +188,7 @@ async def update_user_password(user: UserChangePassword, session: AsyncSession =
             content={
                 "success": True,
                 "detail": "User password changed.",
-            }
+            },
         )
 
     if user_password_changed is None:

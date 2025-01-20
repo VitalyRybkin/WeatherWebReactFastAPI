@@ -50,7 +50,7 @@ async def get_user(
 
     result: Result = await session.execute(get_user_info)
     user_info: Users = result.scalar()
-    # TODO make return universal
+
     return user_info if user_info else None
 
 
@@ -68,12 +68,14 @@ async def link_user_accounts(
     session.add(web_user_found)
     await session.execute(delete(Users).where(Users.id == bot_user_found.id))
     await session.commit()
-    # TODO make return universal
+
     return web_user_found
 
 
 @handling_interface_error
-async def change_user_password(user_with_new_password: Users, session: AsyncSession) -> UserChangePassword | InterfaceError:
+async def change_user_password(
+    user_with_new_password: Users, session: AsyncSession
+) -> Users | InterfaceError:
     """
     Function. Deletes a user from the database by account ID.
     :param user_with_new_password:
@@ -84,5 +86,4 @@ async def change_user_password(user_with_new_password: Users, session: AsyncSess
     session.add(user_with_new_password)
     await session.commit()
 
-    await session.refresh(user_with_new_password)
     return user_with_new_password
