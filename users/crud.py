@@ -3,8 +3,9 @@ from sqlalchemy import insert, select, Select, Result, exc, delete
 from sqlalchemy.exc import IntegrityError, InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Users, Current, Daily, Hourly, Settings
-from utils.schemas import UserChangePassword
+from models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
+from models.tables import Tables
+from utils.schemas import UserChangePassword, UserLocation
 from utils.utils import handling_integrity_error, handling_interface_error
 
 
@@ -87,3 +88,18 @@ async def change_user_password(
     await session.commit()
 
     return user_with_new_password
+
+
+@handling_interface_error
+async def add_location(
+    location: UserLocation, session: AsyncSession, target
+) -> UserLocation | InterfaceError:
+    if target == Tables.FAVORITES:
+        location_info = Favorites(**location.model_dump())
+    else:
+        location_info = Wishlist(**location.model_dump())
+
+    session.add(location_info)
+    await session.commit()
+
+    return location

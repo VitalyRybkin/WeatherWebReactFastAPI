@@ -9,8 +9,15 @@ from users.crud import (
     get_user,
     link_user_accounts,
     change_user_password,
+    add_location,
 )
-from utils.schemas import UserCreate, UserLogin, UserAccountsLink, UserChangePassword
+from utils.schemas import (
+    UserCreate,
+    UserLogin,
+    UserAccountsLink,
+    UserChangePassword,
+    UserLocation,
+)
 
 
 async def create_user(
@@ -90,6 +97,7 @@ async def linking_accounts(
     return web_user_found
 
 
+# TODO change password with user id stored in frontend (exclude user_found)
 async def change_password(
     user: UserChangePassword, session: AsyncSession
 ) -> None | Users | InterfaceError:
@@ -102,3 +110,13 @@ async def change_password(
         return await change_user_password(user_found, session)
     else:
         return None
+
+
+async def add_favorite_location(
+    location_info: UserLocation, session: AsyncSession, target: str
+):
+    location_added: UserLocation | InterfaceError = await add_location(
+        location_info, session, target
+    )
+
+    return location_added

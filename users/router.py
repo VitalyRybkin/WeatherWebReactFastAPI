@@ -6,11 +6,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from models import Users
+from models.tables import Tables
 from users import user_controller
-from users.user_controller import user_logging, linking_accounts, change_password
+from users.user_controller import (
+    user_logging,
+    linking_accounts,
+    change_password,
+    add_favorite_location,
+)
 from utils import to_json
 from utils.db_engine import db_engine
-from utils.schemas import UserCreate, UserLogin, UserAccountsLink, UserChangePassword
+from utils.schemas import (
+    UserCreate,
+    UserLogin,
+    UserAccountsLink,
+    UserChangePassword,
+    UserLocation,
+)
 
 router = APIRouter(prefix="/users")
 
@@ -197,6 +209,41 @@ async def update_user_password(
             content={"detail": "Incorrect password."},
         )
     if type(user_password_changed) is InterfaceError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error. User password could not be changed.",
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_404_BAD_REQUEST,
+        detail="Something went wrong.",
+    )
+
+
+@router.post(
+    "/add_favorite_location/",
+    summary="Add user's favorite location",
+)
+async def new_favorite_location(
+    location: UserLocation,
+    session: AsyncSession = Depends(db_engine.session_dependency),
+):
+    favorite_loc_added: UserLocation | InterfaceError = await add_favorite_location(
+        location_info=location, session=session, target=Tables.FAVORITES
+    )
+
+    if type(favorite_loc_added) is UserLocation:
+        location_info = location.model_dump(mode="json")
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "detail": "User favorite location added.",
+                "location_info": location_info,
+            },
+        )
+
+    if type(favorite_loc_added) is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error. User password could not be changed.",
