@@ -101,6 +101,12 @@ async def linking_accounts(
 async def change_password(
     user: UserChangePassword, session: AsyncSession
 ) -> None | Users | InterfaceError:
+    """
+    Function. Handling user change password.
+    :param user: user information (login, old password, new password)
+    :param session: AsyncSession
+    :return: new user information, an error on new password, None if user was not found
+    """
     user_found: Users | InterfaceError | None = await get_user(
         session, user_login=user.login
     )
@@ -112,9 +118,16 @@ async def change_password(
         return None
 
 
-async def add_favorite_location(
+async def add_new_location(
     location_info: UserLocation, session: AsyncSession, target: str
 ):
+    """
+    Function. Handling adding new location to database.
+    :param location_info: location information
+    :param session: AsyncSession
+    :param target: target of the operation (table name)
+    :return: location info or an error on adding new location
+    """
     location_added: UserLocation | InterfaceError = await add_location(
         location_info, session, target
     )

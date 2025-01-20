@@ -4,7 +4,7 @@ __all__ = (
     "user_logging",
     "linking_accounts",
     "change_password",
-    "add_favorite_location",
+    "add_new_location",
 )
 
 from .router import router
@@ -13,5 +13,5 @@ from .user_controller import (
     user_logging,
     linking_accounts,
     change_password,
-    add_favorite_location,
+    add_new_location,
 )

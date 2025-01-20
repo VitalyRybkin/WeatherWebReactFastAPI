@@ -12,7 +12,7 @@ from users.user_controller import (
     user_logging,
     linking_accounts,
     change_password,
-    add_favorite_location,
+    add_new_location,
 )
 from utils import to_json
 from utils.db_engine import db_engine
@@ -221,29 +221,53 @@ async def update_user_password(
 
 
 @router.post(
-    "/add_favorite_location/",
-    summary="Add user's favorite location",
+    "/add_location/",
+    summary="Add user's favorite location or new location to wishlist",
 )
-async def new_favorite_location(
+async def add_new_user_location(
+    target: str,
     location: UserLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ):
-    favorite_loc_added: UserLocation | InterfaceError = await add_favorite_location(
-        location_info=location, session=session, target=Tables.FAVORITES
-    )
+    """
+    Function. Adds user's favorite location or new location to wishlist.'
+    :param target: operation target - 'favorite' or 'wishlist'
+    :param location: location info
+    :param session: AsyncSession
+    :return: added location info or an HTTP error
+    """
+    match target:
+        case "wishlist":
+            loc_added: UserLocation | InterfaceError = await add_new_location(
+                location_info=location, session=session, target=Tables.WISHLIST
+            )
+        case "favorite":
+            loc_added: UserLocation | InterfaceError = await add_new_location(
+                location_info=location, session=session, target=Tables.FAVORITES
+            )
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Target parameter was not found.",
+            )
 
-    if type(favorite_loc_added) is UserLocation:
+    if type(loc_added) is UserLocation:
         location_info = location.model_dump(mode="json")
+        detail: str = (
+            "User favorite location added."
+            if target == "favorite"
+            else "User wishlist location added."
+        )
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
                 "success": True,
-                "detail": "User favorite location added.",
+                "detail": detail,
                 "location_info": location_info,
             },
         )
 
-    if type(favorite_loc_added) is InterfaceError:
+    if type(loc_added) is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error. User password could not be changed.",

@@ -94,6 +94,13 @@ async def change_user_password(
 async def add_location(
     location: UserLocation, session: AsyncSession, target
 ) -> UserLocation | InterfaceError:
+    """
+    Function. Adds a new location to the database.
+    :param location: location info
+    :param session: AsyncSession.
+    :param target: operation target (table name)
+    :return: location info or an error.
+    """
     if target == Tables.FAVORITES:
         location_info = Favorites(**location.model_dump())
     else:
