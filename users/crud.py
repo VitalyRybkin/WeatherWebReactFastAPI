@@ -110,3 +110,22 @@ async def add_location(
     await session.commit()
 
     return location
+
+
+@handling_interface_error
+async def get_location(session: AsyncSession, acc_id: int) -> Favorites | None:
+    get_loc_info: Select = select(Favorites).filter(Favorites.acc_id == acc_id)
+    result: Result = await session.execute(get_loc_info)
+    location_info: Users = result.scalar()
+
+    return location_info if location_info else None
+
+
+@handling_interface_error
+async def update_location(
+    new_location: Favorites, session: AsyncSession
+) -> Favorites | InterfaceError:
+    session.add(new_location)
+    await session.commit()
+
+    return new_location

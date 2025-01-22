@@ -5,7 +5,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from models import Users
+from models import Users, Favorites
 from models.tables import Tables
 from users import user_controller
 from users.user_controller import (
@@ -13,6 +13,7 @@ from users.user_controller import (
     linking_accounts,
     change_password,
     add_new_location,
+    update_user_location,
 )
 from utils import to_json
 from utils.db_engine import db_engine
@@ -175,7 +176,7 @@ async def link_account(
     )
 
 
-@router.patch(
+@router.put(
     "/change_password/",
     summary="Change user password",
     description="Changes user password with login, password, new password",
@@ -183,7 +184,7 @@ async def link_account(
 async def update_user_password(
     user: UserChangePassword,
     session: AsyncSession = Depends(db_engine.session_dependency),
-):
+) -> JSONResponse:
     """
     Function. Changes user password.
     :param user: login, password, new password
@@ -228,7 +229,7 @@ async def add_new_user_location(
     target: str,
     location: UserLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
-):
+) -> JSONResponse:
     """
     Function. Adds user's favorite location or new location to wishlist.'
     :param target: operation target - 'favorite' or 'wishlist'
@@ -271,6 +272,44 @@ async def add_new_user_location(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error. User password could not be changed.",
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_404_BAD_REQUEST,
+        detail="Something went wrong.",
+    )
+
+
+@router.patch("/change_location/", summary="Change user favorite location")
+async def change_user_location(
+    location: UserLocation,
+    session: AsyncSession = Depends(db_engine.session_dependency),
+) -> JSONResponse:
+    location_updated: UserLocation | InterfaceError = await update_user_location(
+        location_info=location, session=session
+    )
+
+    if type(location_updated) is Favorites:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "detail": "User favorite location changed.",
+                "location_info": location.model_dump(mode="json"),
+            }
+        )
+    elif type(location_updated) is InterfaceError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error. User favorite location could not be changed.",
+        )
+    elif location_updated is None:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "success": False,
+                "detail": "User favorite location could not be found.",
+            }
         )
 
     raise HTTPException(

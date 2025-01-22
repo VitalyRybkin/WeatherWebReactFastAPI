@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import bcrypt
+from requests import session
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -64,6 +65,7 @@ class Users(AbstractBaseModel):
         password = password.encode("utf-8")
         hashed = bcrypt.hashpw(password, salt)
         return hashed.decode("utf8")
+
 
     def verify_password(self, password: bytes):
         """

@@ -1,4 +1,5 @@
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, select, Result
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import AbstractBaseModel
@@ -19,6 +20,7 @@ class Favorites(AbstractBaseModel):
     loc_country: str
         user favorite location country (String(100), nullable=False)
     """
+
     __tablename__ = Tables.FAVORITES
 
     users = Tables.USERS
@@ -42,6 +44,14 @@ class Favorites(AbstractBaseModel):
         single_parent=True,
         cascade="all, delete",
     )
+
+    @hybrid_property
+    def get_location_by_acc_id(self):
+        return self.acc_id
+
+    @get_location_by_acc_id.expression
+    def get_location_by_acc_id(cls):
+        return cls.acc_id
 
     def __repr__(self):
         return (

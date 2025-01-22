@@ -1,15 +1,18 @@
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Users
+from models import Users, Favorites
 from users.crud import (
     create_new_user,
     get_user,
     link_user_accounts,
     change_user_password,
     add_location,
+    get_location,
+    update_location,
 )
 from utils.schemas import (
     UserCreate,
@@ -133,3 +136,17 @@ async def add_new_location(
     )
 
     return location_added
+
+
+async def update_user_location(location_info: UserLocation, session: AsyncSession):
+    location: Favorites | InterfaceError  = await get_location(
+        session, acc_id=location_info.acc_id
+    )
+
+    if type(location) is Favorites:
+        location.loc_name = location_info.loc_name
+        location.loc_region = location_info.loc_region
+        location.loc_country = location_info.loc_country
+        await update_location(location, session)
+
+    return location

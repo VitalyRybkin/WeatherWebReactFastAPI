@@ -1,6 +1,6 @@
 import functools
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, InterfaceError
 
 
 def to_json(table):
@@ -28,7 +28,7 @@ def handling_interface_error(func):
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
-        except IntegrityError as e:
+        except InterfaceError as e:
             print(e)
             return e
 
