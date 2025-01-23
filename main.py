@@ -4,8 +4,8 @@ import uvicorn
 from fastapi import FastAPI
 
 from models import AbstractBaseModel
-from users.user_router import router as users_router
-from users.settings_router import router as settings_router
+from users.user_router import user_router
+from users.settings_router import settings_router
 from utils.db_engine import db_engine
 
 
@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan, root_path="/app")
-app.include_router(users_router, tags=["users"])
+app.include_router(user_router, tags=["users"])
 app.include_router(settings_router, tags=["settings"])
 
 

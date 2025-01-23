@@ -1,6 +1,8 @@
 from typing import Annotated
-from pydantic import BaseModel, EmailStr, ConfigDict
-from annotated_types import MinLen, MaxLen
+
+from annotated_types import MaxLen
+from pydantic import BaseModel, ConfigDict
+
 
 class FavoriteLocation(BaseModel):
     """

@@ -1,5 +1,5 @@
-from models import Favorites
-from users.crud import update_location, get_location, add_location
+from models import Favorites, Wishlist
+from users.crud import update_location, get_location, add_location, delete_location
 from utils.setting_schemas import FavoriteLocation
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,5 +39,16 @@ async def update_user_location(location_info: FavoriteLocation, session: AsyncSe
         location.loc_region = location_info.loc_region
         location.loc_country = location_info.loc_country
         await update_location(location, session)
+
+    return location
+
+async def delete_user_location(location_info: FavoriteLocation, session: AsyncSession) -> FavoriteLocation | InterfaceError:
+    """
+    Function. Handling deleting user location from wishlist.
+    :param location_info: user location information
+    :param session:
+    :return:
+    """
+    location: FavoriteLocation | InterfaceError = await delete_location(session=session, location_info=location_info)
 
     return location

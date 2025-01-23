@@ -21,10 +21,10 @@ from utils.user_schemas import (
     UserChangePassword,
 )
 
-router = APIRouter(prefix="/users")
+user_router = APIRouter(prefix="/users")
 
 
-@router.post("/registration/", summary="Register a new user")
+@user_router.post("/registration/", summary="Register a new user")
 async def create_user(
     new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
 ) -> JSONResponse:
@@ -72,7 +72,7 @@ async def create_user(
     )
 
 
-@router.get("/login/", summary="User login with e-mail and password")
+@user_router.get("/login/", summary="User login with e-mail and password")
 async def login(
     user_login: EmailStr,
     user_password: str,
@@ -138,7 +138,7 @@ async def login(
     )
 
 
-@router.patch("/link/", summary="Link web and telegram accounts")
+@user_router.patch("/link/", summary="Link web and telegram accounts")
 async def link_account(
     user_link_info: UserAccountsLink,
     session: AsyncSession = Depends(db_engine.session_dependency),
@@ -172,7 +172,7 @@ async def link_account(
     )
 
 
-@router.put(
+@user_router.put(
     "/change_password/",
     summary="Change user password",
     description="Changes user password with login, password, new password",

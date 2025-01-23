@@ -6,13 +6,13 @@ from starlette.responses import JSONResponse
 
 from models import Favorites
 from models.tables import Tables
-from users.settings_controller import update_user_location, add_new_location
+from users.settings_controller import update_user_location, add_new_location, delete_user_location
 from utils import db_engine
 from utils.setting_schemas import FavoriteLocation
 
-router = APIRouter(prefix="/settings", tags=["settings"])
+settings_router = APIRouter(prefix="/settings", tags=["settings"])
 
-@router.post(
+@settings_router.post(
     "/add_location/",
     summary="Add user's favorite location or new location to wishlist",
 )
@@ -71,7 +71,7 @@ async def add_new_user_location(
     )
 
 
-@router.patch("/change_location/", summary="Change user favorite location")
+@settings_router.patch("/change_location/", summary="Change user favorite location")
 async def change_user_location(
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
@@ -101,6 +101,30 @@ async def change_user_location(
                 "success": False,
                 "detail": "User favorite location could not be found.",
             }
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_404_BAD_REQUEST,
+        detail="Something went wrong.",
+    )
+
+@settings_router.delete("/remove_location/", summary="Remove user location from wishlist")
+async def remove_user_location(location: FavoriteLocation, session: AsyncSession = Depends(db_engine.session_dependency),) -> JSONResponse:
+    location_deleted: FavoriteLocation | InterfaceError = await delete_user_location(location_info=location, session=session)
+
+    if type(location_deleted) is FavoriteLocation:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "detail": "User favorite location removed from wishlist.",
+                "location_info": location.model_dump(mode="json"),
+            }
+        )
+    elif type(location_deleted) is InterfaceError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error. User favorite location could not be removed.",
         )
 
     raise HTTPException(

@@ -141,3 +141,16 @@ async def update_location(
     await session.commit()
 
     return new_location
+
+@handling_interface_error
+async def delete_location(session: AsyncSession, location_info: FavoriteLocation) -> FavoriteLocation | InterfaceError:
+    """
+    Function. Deletes user's favorite location from wishlist
+    :param session: AsyncSession.
+    :param location_info: location to delete.
+    :return: location info or an error.
+    """
+    await session.execute(
+        delete(Wishlist).where(Wishlist.acc_id == location_info.acc_id).where(Wishlist.loc_id == location_info.loc_id))
+    await session.commit()
+    return location_info
