@@ -1,11 +1,11 @@
 from pydantic import EmailStr
-from sqlalchemy import insert, select, Select, Result, exc, delete
+from sqlalchemy import insert, select, Select, Result, delete
 from sqlalchemy.exc import IntegrityError, InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
 from models.tables import Tables
-from utils.schemas import UserChangePassword, UserLocation
+from utils.setting_schemas import FavoriteLocation
 from utils.utils import handling_integrity_error, handling_interface_error
 
 
@@ -92,8 +92,8 @@ async def change_user_password(
 
 @handling_interface_error
 async def add_location(
-    location: UserLocation, session: AsyncSession, target
-) -> UserLocation | InterfaceError:
+    location: FavoriteLocation, session: AsyncSession, target
+) -> FavoriteLocation | InterfaceError:
     """
     Function. Adds a new location to the database.
     :param location: location info

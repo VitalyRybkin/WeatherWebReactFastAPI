@@ -14,7 +14,7 @@ from users.user_controller import (
 )
 from utils import to_json
 from utils.db_engine import db_engine
-from utils.schemas import (
+from utils.user_schemas import (
     UserCreate,
     UserLogin,
     UserAccountsLink,

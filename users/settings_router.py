@@ -8,7 +8,7 @@ from models import Favorites
 from models.tables import Tables
 from users.settings_controller import update_user_location, add_new_location
 from utils import db_engine
-from utils.schemas import UserLocation
+from utils.setting_schemas import FavoriteLocation
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/settings", tags=["settings"])
 )
 async def add_new_user_location(
     target: str,
-    location: UserLocation,
+    location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
     """
@@ -30,11 +30,11 @@ async def add_new_user_location(
     """
     match target:
         case "wishlist":
-            loc_added: UserLocation | InterfaceError = await add_new_location(
+            loc_added: FavoriteLocation | InterfaceError = await add_new_location(
                 location_info=location, session=session, target=Tables.WISHLIST
             )
         case "favorite":
-            loc_added: UserLocation | InterfaceError = await add_new_location(
+            loc_added: FavoriteLocation | InterfaceError = await add_new_location(
                 location_info=location, session=session, target=Tables.FAVORITES
             )
         case _:
@@ -43,7 +43,7 @@ async def add_new_user_location(
                 detail="Target parameter was not found.",
             )
 
-    if type(loc_added) is UserLocation:
+    if type(loc_added) is FavoriteLocation:
         location_info = location.model_dump(mode="json")
         detail: str = (
             "User favorite location added."
@@ -73,10 +73,10 @@ async def add_new_user_location(
 
 @router.patch("/change_location/", summary="Change user favorite location")
 async def change_user_location(
-    location: UserLocation,
+    location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
-    location_updated: UserLocation | InterfaceError = await update_user_location(
+    location_updated: FavoriteLocation | InterfaceError = await update_user_location(
         location_info=location, session=session
     )
 

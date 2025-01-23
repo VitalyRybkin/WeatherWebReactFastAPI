@@ -1,12 +1,12 @@
 from models import Favorites
 from users.crud import update_location, get_location, add_location
-from utils.schemas import UserLocation
+from utils.setting_schemas import FavoriteLocation
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import InterfaceError
 
 async def add_new_location(
-    location_info: UserLocation, session: AsyncSession, target: str
+    location_info: FavoriteLocation, session: AsyncSession, target: str
 ):
     """
     Function. Handling adding new location to database.
@@ -15,14 +15,14 @@ async def add_new_location(
     :param target: target of the operation (table name)
     :return: location info or an error on adding new location
     """
-    location_added: UserLocation | InterfaceError = await add_location(
+    location_added: FavoriteLocation | InterfaceError = await add_location(
         location_info, session, target
     )
 
     return location_added
 
 
-async def update_user_location(location_info: UserLocation, session: AsyncSession):
+async def update_user_location(location_info: FavoriteLocation, session: AsyncSession):
     """
     Function. Handling updating user location
     :param location_info: new location information

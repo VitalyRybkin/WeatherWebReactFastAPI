@@ -1,25 +1,20 @@
 import uuid
 
-from sqlalchemy import select
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Users, Favorites
+from models import Users
 from users.crud import (
     create_new_user,
     get_user,
     link_user_accounts,
     change_user_password,
-    add_location,
-    get_location,
-    update_location,
 )
-from utils.schemas import (
+from utils.user_schemas import (
     UserCreate,
     UserLogin,
     UserAccountsLink,
     UserChangePassword,
-    UserLocation,
 )
 
 
