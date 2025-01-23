@@ -1,13 +1,18 @@
-from models import Favorites, Wishlist
+from typing import Type
+
+from sqlalchemy.exc import InterfaceError, IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from models import Favorites
+from models.tables import Tables
 from users.crud import update_location, get_location, add_location, delete_location
+from utils import FavoriteLocation
 from utils.setting_schemas import FavoriteLocation
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import InterfaceError
 
 async def add_new_location(
     location_info: FavoriteLocation, session: AsyncSession, target: str
-):
+) -> Type[IntegrityError] | FavoriteLocation | InterfaceError:
     """
     Function. Handling adding new location to database.
     :param location_info: location information
@@ -15,6 +20,13 @@ async def add_new_location(
     :param target: target of the operation (table name)
     :return: location info or an error on adding new location
     """
+    if target == Tables.WISHLIST:
+        location: Favorites | InterfaceError = await get_location(
+            session, location_info=location_info, target=Tables.WISHLIST
+        )
+        if location:
+            return IntegrityError
+
     location_added: FavoriteLocation | InterfaceError = await add_location(
         location_info, session, target
     )
@@ -30,7 +42,7 @@ async def update_user_location(location_info: FavoriteLocation, session: AsyncSe
     :return: new location info or an error on updating new location
     """
     location: Favorites | InterfaceError  = await get_location(
-        session, acc_id=location_info.acc_id
+        session, location_info=location_info, target=Tables.FAVORITES
     )
 
     if type(location) is Favorites:

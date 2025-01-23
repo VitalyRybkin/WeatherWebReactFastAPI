@@ -113,14 +113,19 @@ async def add_location(
 
 
 @handling_interface_error
-async def get_location(session: AsyncSession, acc_id: int) -> Favorites | None:
+async def get_location(session: AsyncSession, location_info: FavoriteLocation, target) -> Favorites | None:
     """
-    Function. Fetches user's favorite location from the database.
+    Function. Fetches user's favorite location from favorites or wishlist from the database.
+    :param target: target table.
+    :param location_info: location information.
     :param session: AsyncSession.
-    :param acc_id: user account ID
     :return: favorite location info or an error.
     """
-    get_loc_info: Select = select(Favorites).filter(Favorites.acc_id == acc_id)
+    if target==Tables.FAVORITES:
+        get_loc_info: Select = select(Favorites).filter(Favorites.acc_id == location_info.acc_id)
+    else:
+        get_loc_info: Select = select(Wishlist).where(Wishlist.acc_id == location_info.acc_id).where(Wishlist.loc_id==location_info.loc_id)
+
     result: Result = await session.execute(get_loc_info)
     location_info: Users = result.scalar()
 

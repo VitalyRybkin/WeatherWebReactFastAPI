@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
-from sqlalchemy.exc import InterfaceError
+from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
@@ -65,8 +65,14 @@ async def add_new_user_location(
             detail="Database connection error. User password could not be changed.",
         )
 
+    if type(loc_added) is IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Location could not be added. Location already exists.",
+        )
+
     raise HTTPException(
-        status_code=status.HTTP_404_BAD_REQUEST,
+        status_code=status.HTTP_400_BAD_REQUEST,
         detail="Something went wrong.",
     )
 
