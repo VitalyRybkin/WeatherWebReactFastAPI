@@ -4,14 +4,16 @@ __all__ = (
     "user_logging",
     "linking_accounts",
     "change_password",
-    "add_new_location",
+    "change_user_location",
+    "add_new_user_location",
 )
 
-from .router import router
+from .user_router import router
 from .user_controller import (
     create_user,
     user_logging,
     linking_accounts,
     change_password,
-    add_new_location,
 )
+
+from .settings_router import change_user_location, add_new_user_location

@@ -114,6 +114,12 @@ async def add_location(
 
 @handling_interface_error
 async def get_location(session: AsyncSession, acc_id: int) -> Favorites | None:
+    """
+    Function. Fetches user's favorite location from the database.
+    :param session: AsyncSession.
+    :param acc_id: user account ID
+    :return: favorite location info or an error.
+    """
     get_loc_info: Select = select(Favorites).filter(Favorites.acc_id == acc_id)
     result: Result = await session.execute(get_loc_info)
     location_info: Users = result.scalar()
@@ -125,6 +131,12 @@ async def get_location(session: AsyncSession, acc_id: int) -> Favorites | None:
 async def update_location(
     new_location: Favorites, session: AsyncSession
 ) -> Favorites | InterfaceError:
+    """
+    Function. Updates user's favorite location.
+    :param new_location: new favorite location info.
+    :param session: AsyncSession.
+    :return: updated favorite location info or an error.
+    """
     session.add(new_location)
     await session.commit()
 
