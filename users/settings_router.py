@@ -28,20 +28,17 @@ async def add_new_user_location(
     :param session: AsyncSession
     :return: added location info or an HTTP error
     """
-    match target:
-        case "wishlist":
-            loc_added: FavoriteLocation | InterfaceError = await add_new_location(
-                location_info=location, session=session, target=Tables.WISHLIST
-            )
-        case "favorite":
-            loc_added: FavoriteLocation | InterfaceError = await add_new_location(
-                location_info=location, session=session, target=Tables.FAVORITES
-            )
-        case _:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Target parameter was not found.",
-            )
+    if target not in ["favorite", "wishlist"]:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Target parameter must be 'favorite' or 'wishlist'",
+        )
+
+    loc_added: FavoriteLocation | InterfaceError = await add_new_location(
+        location_info=location,
+        session=session,
+        target=Tables.FAVORITES if target == "favorite" else Tables.WISHLIST
+    )
 
     if type(loc_added) is FavoriteLocation:
         location_info = location.model_dump(mode="json")
@@ -62,10 +59,10 @@ async def add_new_user_location(
     if type(loc_added) is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User password could not be changed.",
+            detail="Database connection error. User location could not be added or changed.",
         )
 
-    if type(loc_added) is IntegrityError:
+    if loc_added is IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Location could not be added. Location already exists.",

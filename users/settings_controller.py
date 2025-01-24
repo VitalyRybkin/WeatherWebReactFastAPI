@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models import Favorites
 from models.tables import Tables
 from users.crud import update_location, get_location, add_location, delete_location
-from utils import FavoriteLocation
 from utils.setting_schemas import FavoriteLocation
 
 
@@ -22,7 +21,9 @@ async def add_new_location(
     """
     if target == Tables.WISHLIST:
         location: Favorites | InterfaceError = await get_location(
-            session, location_info=location_info, target=Tables.WISHLIST
+            session,
+            location_info=location_info,
+            target=Tables.WISHLIST
         )
         if location:
             return IntegrityError
