@@ -95,7 +95,6 @@ async def linking_accounts(
     return web_user_found
 
 
-# TODO change password with user id stored in frontend (exclude user_found)
 async def change_password(
     user: UserChangePassword, session: AsyncSession
 ) -> None | Users | InterfaceError:
@@ -105,6 +104,8 @@ async def change_password(
     :param session: AsyncSession
     :return: new user information, an error on new password, None if user was not found
     """
+    # TODO change password with user id stored in frontend (exclude user_found)
+    # TODO update password with class method
     user_found: Users | InterfaceError | None = await get_user(
         session, user_login=user.login
     )

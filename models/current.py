@@ -21,6 +21,7 @@ class Current(AbstractBaseModel):
     humidity: bool
         humidity forecast display(default=False)
     """
+
     __tablename__ = Tables.CURRENT
 
     users = Tables.USERS
@@ -45,10 +46,21 @@ class Current(AbstractBaseModel):
         cascade="all, delete",
     )
 
+    def update_current(
+        self,
+        wind_extended: bool = None,
+        pressure: bool = None,
+        visibility: bool = None,
+        humidity: bool = None,
+    ):
+        self.wind_extended = wind_extended
+        self.pressure = pressure
+        self.visibility = visibility
+        self.humidity = humidity
+
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            # f"current_id={self.current_id}, "
             f"acc_id={self.acc_id}, "
             f"wind_extended={self.wind_extended}, "
             f"pressure={self.pressure}, "

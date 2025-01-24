@@ -19,6 +19,7 @@ class Daily(AbstractBaseModel):
     humidity: bool
         humidity forecast display (default=False)
     """
+
     __tablename__ = Tables.DAILY
 
     users = Tables.USERS
@@ -35,6 +36,16 @@ class Daily(AbstractBaseModel):
     visibility: Mapped[bool] = mapped_column(default=False)
     humidity: Mapped[bool] = mapped_column(default=False)
 
+    def update_daily(
+        self,
+        astro: bool = None,
+        visibility: bool = None,
+        humidity: bool = None,
+    ):
+        self.astro = astro
+        self.visibility = visibility
+        self.humidity = humidity
+
     parent: Mapped[users] = relationship(
         f"{users.title()}",
         back_populates="daily",
@@ -45,7 +56,6 @@ class Daily(AbstractBaseModel):
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            # f"daily_id={self.daily_id}, "
             f"astro={self.astro}, "
             f"visibility={self.visibility}, "
             f"humidity={self.humidity}, "

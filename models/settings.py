@@ -19,6 +19,7 @@ class Settings(AbstractBaseModel):
     hourly: int
         number of hours displayed default=6)
     """
+
     __tablename__ = Tables.SETTINGS
 
     users = Tables.USERS
@@ -42,10 +43,16 @@ class Settings(AbstractBaseModel):
         cascade="all, delete",
     )
 
+    def update_user_settings(
+        self, current: bool = None, daily: int = None, hourly: int = None
+    ):
+        self.current = current
+        self.daily = daily
+        self.hourly = hourly
+
     def __repr__(self):
         return (
             f"<{self.__class__.__name__}("
-            # f"set_id={self.set_id},"
             f"acc_id={self.acc_id},"
             f"current={self.current},"
             f"daily={self.daily},"

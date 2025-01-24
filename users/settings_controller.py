@@ -1,12 +1,25 @@
 from typing import Type
 
+from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Favorites
+from models import Favorites, Current, Hourly, Daily, Settings
 from models.tables import Tables
-from users.crud import update_location, get_location, add_location, delete_location
-from utils.setting_schemas import FavoriteLocation
+from users.crud import (
+    update_location,
+    get_location,
+    add_location,
+    delete_location,
+    update_settings,
+)
+from utils.setting_schemas import (
+    FavoriteLocation,
+    CurrentSettings,
+    HourlySettings,
+    DailySettings,
+    UserSettings,
+)
 
 
 async def add_new_location(
@@ -21,9 +34,7 @@ async def add_new_location(
     """
     if target == Tables.WISHLIST:
         location: Favorites | InterfaceError = await get_location(
-            session,
-            location_info=location_info,
-            target=Tables.WISHLIST
+            session, location_info=location_info, target=Tables.WISHLIST
         )
         if location:
             return IntegrityError
@@ -42,7 +53,8 @@ async def update_user_location(location_info: FavoriteLocation, session: AsyncSe
     :param session: AsyncSession
     :return: new location info or an error on updating new location
     """
-    location: Favorites | InterfaceError  = await get_location(
+    # TODO update user location with class method
+    location: Favorites | InterfaceError = await get_location(
         session, location_info=location_info, target=Tables.FAVORITES
     )
 
@@ -55,13 +67,31 @@ async def update_user_location(location_info: FavoriteLocation, session: AsyncSe
 
     return location
 
-async def delete_user_location(location_info: FavoriteLocation, session: AsyncSession) -> FavoriteLocation | InterfaceError:
+
+async def delete_user_location(
+    location_info: FavoriteLocation, session: AsyncSession
+) -> FavoriteLocation | InterfaceError:
     """
     Function. Handling deleting user location from wishlist.
     :param location_info: user location information
     :param session:
     :return:
     """
-    location: FavoriteLocation | InterfaceError = await delete_location(session=session, location_info=location_info)
+    location: FavoriteLocation | InterfaceError = await delete_location(
+        session=session, location_info=location_info
+    )
 
     return location
+
+
+async def update_user_settings(
+    login: EmailStr,
+    current: CurrentSettings,
+    hourly: HourlySettings,
+    daily: DailySettings,
+    settings: UserSettings,
+    session: AsyncSession,
+):
+    settings_updated = await update_settings(
+        login, current, hourly, daily, settings, session
+    )

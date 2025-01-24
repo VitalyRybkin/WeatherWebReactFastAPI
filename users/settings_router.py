@@ -1,16 +1,30 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
+from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from models import Favorites
+from models import Favorites, Users
 from models.tables import Tables
-from users.settings_controller import update_user_location, add_new_location, delete_user_location
+from users.crud import get_user
+from users.settings_controller import (
+    update_user_location,
+    add_new_location,
+    delete_user_location,
+    update_user_settings,
+)
 from utils import db_engine
-from utils.setting_schemas import FavoriteLocation
+from utils.setting_schemas import (
+    FavoriteLocation,
+    UserSettings,
+    CurrentSettings,
+    HourlySettings,
+    DailySettings,
+)
 
 settings_router = APIRouter(prefix="/settings", tags=["settings"])
+
 
 @settings_router.post(
     "/add_location/",
@@ -37,7 +51,7 @@ async def add_new_user_location(
     loc_added: FavoriteLocation | InterfaceError = await add_new_location(
         location_info=location,
         session=session,
-        target=Tables.FAVORITES if target == "favorite" else Tables.WISHLIST
+        target=Tables.FAVORITES if target == "favorite" else Tables.WISHLIST,
     )
 
     if type(loc_added) is FavoriteLocation:
@@ -90,7 +104,7 @@ async def change_user_location(
                 "success": True,
                 "detail": "User favorite location changed.",
                 "location_info": location.model_dump(mode="json"),
-            }
+            },
         )
     elif type(location_updated) is InterfaceError:
         raise HTTPException(
@@ -103,7 +117,7 @@ async def change_user_location(
             content={
                 "success": False,
                 "detail": "User favorite location could not be found.",
-            }
+            },
         )
 
     raise HTTPException(
@@ -111,9 +125,17 @@ async def change_user_location(
         detail="Something went wrong.",
     )
 
-@settings_router.delete("/remove_location/", summary="Remove user location from wishlist")
-async def remove_user_location(location: FavoriteLocation, session: AsyncSession = Depends(db_engine.session_dependency),) -> JSONResponse:
-    location_deleted: FavoriteLocation | InterfaceError = await delete_user_location(location_info=location, session=session)
+
+@settings_router.delete(
+    "/remove_location/", summary="Remove user location from wishlist"
+)
+async def remove_user_location(
+    location: FavoriteLocation,
+    session: AsyncSession = Depends(db_engine.session_dependency),
+) -> JSONResponse:
+    location_deleted: FavoriteLocation | InterfaceError = await delete_user_location(
+        location_info=location, session=session
+    )
 
     if type(location_deleted) is FavoriteLocation:
         return JSONResponse(
@@ -122,7 +144,7 @@ async def remove_user_location(location: FavoriteLocation, session: AsyncSession
                 "success": True,
                 "detail": "User favorite location removed from wishlist.",
                 "location_info": location.model_dump(mode="json"),
-            }
+            },
         )
     elif type(location_deleted) is InterfaceError:
         raise HTTPException(
@@ -133,4 +155,19 @@ async def remove_user_location(location: FavoriteLocation, session: AsyncSession
     raise HTTPException(
         status_code=status.HTTP_404_BAD_REQUEST,
         detail="Something went wrong.",
+    )
+
+
+@settings_router.patch("/update_settings/", summary="Update user weather settings")
+async def update_user_weather_settings(
+    login: EmailStr,
+    current: CurrentSettings | None = None,
+    hourly: HourlySettings | None = None,
+    daily: DailySettings | None = None,
+    settings: UserSettings | None = None,
+    session: AsyncSession = Depends(db_engine.session_dependency),
+) -> JSONResponse:
+    # TODO add response
+    settings_updated = await update_user_settings(
+        login, current, hourly, daily, settings, session
     )

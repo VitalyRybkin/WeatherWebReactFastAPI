@@ -5,7 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
 from models.tables import Tables
-from utils.setting_schemas import FavoriteLocation
+from utils.setting_schemas import (
+    FavoriteLocation,
+    CurrentSettings,
+    HourlySettings,
+    DailySettings,
+    UserSettings,
+)
 from utils.utils import handling_integrity_error, handling_interface_error
 
 
@@ -113,7 +119,9 @@ async def add_location(
 
 
 @handling_interface_error
-async def get_location(session: AsyncSession, location_info: FavoriteLocation, target) -> Favorites | None:
+async def get_location(
+    session: AsyncSession, location_info: FavoriteLocation, target
+) -> Favorites | None:
     """
     Function. Fetches user's favorite location from favorites or wishlist from the database.
     :param target: target table.
@@ -121,10 +129,16 @@ async def get_location(session: AsyncSession, location_info: FavoriteLocation, t
     :param session: AsyncSession.
     :return: favorite location info or an error.
     """
-    if target==Tables.FAVORITES:
-        get_loc_info: Select = select(Favorites).filter(Favorites.acc_id == location_info.acc_id)
+    if target == Tables.FAVORITES:
+        get_loc_info: Select = select(Favorites).filter(
+            Favorites.acc_id == location_info.acc_id
+        )
     else:
-        get_loc_info: Select = select(Wishlist).where(Wishlist.acc_id == location_info.acc_id).where(Wishlist.loc_id==location_info.loc_id)
+        get_loc_info: Select = (
+            select(Wishlist)
+            .where(Wishlist.acc_id == location_info.acc_id)
+            .where(Wishlist.loc_id == location_info.loc_id)
+        )
 
     result: Result = await session.execute(get_loc_info)
     location_info: Users = result.scalar()
@@ -147,8 +161,11 @@ async def update_location(
 
     return new_location
 
+
 @handling_interface_error
-async def delete_location(session: AsyncSession, location_info: FavoriteLocation) -> FavoriteLocation | InterfaceError:
+async def delete_location(
+    session: AsyncSession, location_info: FavoriteLocation
+) -> FavoriteLocation | InterfaceError:
     """
     Function. Deletes user's favorite location from wishlist
     :param session: AsyncSession.
@@ -156,6 +173,45 @@ async def delete_location(session: AsyncSession, location_info: FavoriteLocation
     :return: location info or an error.
     """
     await session.execute(
-        delete(Wishlist).where(Wishlist.acc_id == location_info.acc_id).where(Wishlist.loc_id == location_info.loc_id))
+        delete(Wishlist)
+        .where(Wishlist.acc_id == location_info.acc_id)
+        .where(Wishlist.loc_id == location_info.loc_id)
+    )
     await session.commit()
     return location_info
+
+
+@handling_interface_error
+async def update_settings(
+    login: EmailStr,
+    current_settings: CurrentSettings,
+    hourly_settings: HourlySettings,
+    daily_settings: DailySettings,
+    user_settings: UserSettings,
+    session: AsyncSession,
+):
+    user_found: Users | InterfaceError | None = await get_user(
+        session, user_login=login
+    )
+
+    if user_settings:
+        user_found.settings.update_user_settings(
+            **user_settings.model_dump(exclude_none=True)
+        )
+        session.add(user_found.settings)
+
+    if current_settings:
+        user_found.current.update_current(
+            **current_settings.model_dump(exclude_none=True)
+        )
+        session.add(user_found.current)
+
+    if hourly_settings:
+        user_found.hourly.update_hourly(**hourly_settings.model_dump(exclude_none=True))
+        session.add(user_found.hourly)
+
+    if daily_settings:
+        user_found.daily.update_daily(**daily_settings.model_dump(exclude_none=True))
+        session.add(user_found.daily)
+
+    await session.commit()
