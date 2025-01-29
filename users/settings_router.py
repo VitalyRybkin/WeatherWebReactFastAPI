@@ -171,7 +171,8 @@ async def remove_user_location(
 
 @settings_router.patch("/update_settings/", summary="Update user weather settings")
 async def update_user_weather_settings(
-    login: EmailStr,
+    login: EmailStr | None = None,
+    bot_name: str | None = None,
     current: CurrentSettings | None = None,
     hourly: HourlySettings | None = None,
     daily: DailySettings | None = None,
@@ -180,9 +181,10 @@ async def update_user_weather_settings(
 ) -> JSONResponse:
     settings_updated: list[
         Current | Hourly | Daily | Settings
-    ] = await update_user_settings(login, current, hourly, daily, settings, session)
+    ] = await update_user_settings(
+        login, bot_name, current, hourly, daily, settings, session
+    )
 
-    # TODO add update bot settings
     if settings_updated is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

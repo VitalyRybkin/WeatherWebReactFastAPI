@@ -180,7 +180,8 @@ async def link_account(
     :return: whether the user's accounts were successfully linked or not (HTTP error)
     """
 
-    # TODO change logic and response
+    # TODO what if already linked
+    #TODO verify bot account to be linked
     account_linked: Users | None = await linking_accounts(
         user=user_link_info, session=session
     )
@@ -188,7 +189,7 @@ async def link_account(
     if account_linked is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. Accounts could not be linktd.",
+            detail="Database connection error. Accounts could not be linked.",
         )
 
     if account_linked:

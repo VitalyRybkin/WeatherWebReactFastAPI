@@ -68,7 +68,7 @@ async def linking_accounts(
     :param session: AsyncSession
     :return: whether user's accounts were linked or an error on linking accounts
     """
-
+    # TODO add interface error
     web_user_info: Users | InterfaceError | None = await get_user(
         session=session, user_login=user.login
     )

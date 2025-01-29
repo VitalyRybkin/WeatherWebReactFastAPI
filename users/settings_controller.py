@@ -104,6 +104,7 @@ async def delete_user_location(
 
 async def update_user_settings(
     login: EmailStr,
+    bot_name: str,
     current: CurrentSettings,
     hourly: HourlySettings,
     daily: DailySettings,
@@ -111,7 +112,7 @@ async def update_user_settings(
     session: AsyncSession,
 ) -> list[Current | Hourly | Daily | Settings] | InterfaceError | None:
     user_info: Users | InterfaceError | None = await get_user(
-        session=session, user_login=login
+        session=session, user_login=login, bot_name=bot_name
     )
 
     if isinstance(user_info, Users):
