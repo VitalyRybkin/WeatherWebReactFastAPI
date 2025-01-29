@@ -33,12 +33,9 @@ async def create_user(
     else:
         new_user.login = f"{uuid.uuid4()}@bot.com"
 
-    user_created: IntegrityError | InterfaceError | Users = await create_new_user(
-        session, new_user
+    user_created: Users = await create_new_user(
+        session=session, user=new_user
     )
-
-    if type(user_created) is not Users:
-        await session.rollback()
 
     return user_created
 
@@ -52,7 +49,7 @@ async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
     """
 
     user_found: Users | InterfaceError | None = await get_user(
-        session, user_login=user.login
+        session=session, user_login=user.login
     )
     if (
         type(user_found) is Users
@@ -75,10 +72,10 @@ async def linking_accounts(
     """
 
     web_user_found: Users | InterfaceError | None = await get_user(
-        session, user_login=user.login
+        session=session, user_login=user.login
     )
     bot_user_found: Users | InterfaceError | None = await get_user(
-        session, bot_name=user.bot_name
+        session=session, bot_name=user.bot_name
     )
 
     if not bot_user_found:
@@ -89,7 +86,7 @@ async def linking_accounts(
         web_user_found.bot_name = bot_user_found.bot_name
 
         web_user_found: Users | InterfaceError = await link_user_accounts(
-            web_user_found, bot_user_found, session
+            session=session, web_user=web_user_found, bot_user=bot_user_found,
         )
 
     return web_user_found
@@ -104,14 +101,12 @@ async def change_password(
     :param session: AsyncSession
     :return: new user information, an error on new password, None if user was not found
     """
-    # TODO change password with user id stored in frontend (exclude user_found)
-    # TODO update password with class method
     user_found: Users | InterfaceError | None = await get_user(
-        session, user_login=user.login
+        session=session, user_login=user.login
     )
 
     if type(user_found) is Users and user_found.verify_password(user.password.encode()):
         user_found.password = Users.hash_password(user.new_password)
-        return await change_user_password(user_found, session)
+        return await change_user_password(session=session, user_with_new_password=user_found)
     else:
         return None

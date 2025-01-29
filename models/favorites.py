@@ -1,5 +1,4 @@
-from sqlalchemy import ForeignKey, String, select, Result
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import AbstractBaseModel
@@ -45,13 +44,13 @@ class Favorites(AbstractBaseModel):
         cascade="all, delete",
     )
 
-    @hybrid_property
-    def get_location_by_acc_id(self):
-        return self.acc_id
-
-    @get_location_by_acc_id.expression
-    def get_location_by_acc_id(cls):
-        return cls.acc_id
+    def update_location(
+        self, loc_id: int, loc_name: str, loc_region: str, loc_country: str
+    ):
+        self.loc_id = loc_id
+        self.loc_name = loc_name
+        self.loc_region = loc_region
+        self.loc_country = loc_country
 
     def __repr__(self):
         return (

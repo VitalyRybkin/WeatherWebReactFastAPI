@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
 
 import bcrypt
-from requests import session
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_json import mutable_json_type
@@ -41,12 +40,14 @@ class Users(AbstractBaseModel):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now(timezone.utc)
     )
+    #TODO change deleted to email_confirmed
     deleted: Mapped[bool] = False
     bot_id: Mapped[int] = mapped_column(nullable=True)
     bot_name: Mapped[str] = mapped_column(String(50), nullable=True)
     dark_theme: Mapped[bool] = mapped_column(default=False)
     alert = Column(mutable_json_type(dbtype=JSONB))
 
+    #TODO change users to wishlist
     users = relationship("Wishlist", back_populates="parent", uselist=True, lazy="joined")
     favorites = relationship("Favorites", back_populates="parent", uselist=False, lazy="joined")
     settings = relationship("Settings", back_populates="parent", uselist=False, lazy="joined")

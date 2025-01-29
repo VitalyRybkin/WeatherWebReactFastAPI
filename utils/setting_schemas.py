@@ -13,7 +13,7 @@ class WeatherSettings(BaseModel):
     humidity: bool
 
 
-class FavoriteLocation(Settings):
+class FavoriteLocation(BaseModel):
     """
     Pydentic model for user location information
     """

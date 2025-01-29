@@ -1,10 +1,9 @@
 from pydantic import EmailStr
 from sqlalchemy import insert, select, Select, Result, delete
-from sqlalchemy.exc import IntegrityError, InterfaceError
+from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
-from models.tables import Tables
 from utils.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
@@ -17,7 +16,7 @@ from utils.utils import handling_integrity_error, handling_interface_error
 
 @handling_integrity_error
 @handling_interface_error
-async def create_new_user(session, user) -> IntegrityError | InterfaceError | Users:
+async def create_new_user(session, user) -> Users:
     """
     Function. Adds a new user to the database.
     :param session: SQLAlchemy session.
@@ -34,6 +33,7 @@ async def create_new_user(session, user) -> IntegrityError | InterfaceError | Us
     await session.execute(insert(Hourly).values(acc_id=user.id))
     await session.execute(insert(Settings).values(acc_id=user.id))
     await session.commit()
+    await session.refresh(user)
 
     return user
 
@@ -49,7 +49,7 @@ async def get_user(
     :param bot_name: bot name
     :return: user info if successful or an error.
     """
-
+    # TODO handle interface error in controllers call
     if user_login:
         get_user_info: Select = select(Users).filter(Users.login == user_login)
     else:
@@ -63,25 +63,25 @@ async def get_user(
 
 @handling_interface_error
 async def link_user_accounts(
-    web_user_found: Users, bot_user_found: Users, session: AsyncSession
+    session: AsyncSession, web_user: Users, bot_user: Users
 ) -> Users | InterfaceError:
     """
     Function. Updates user accounts - adding bot account to web account. Deletes user's bot-only account.
-    :param bot_user_found: bot user info to delete
-    :param web_user_found: web user info to update.
+    :param bot_user: bot user info to delete
+    :param web_user: web user info to update.
     :param session: SQLAlchemy session.
     :return: user info if successful or an error.
     """
-    session.add(web_user_found)
-    await session.execute(delete(Users).where(Users.id == bot_user_found.id))
+    session.add(web_user)
+    await session.execute(delete(Users).where(Users.id == bot_user.id))
     await session.commit()
 
-    return web_user_found
+    return web_user
 
 
 @handling_interface_error
 async def change_user_password(
-    user_with_new_password: Users, session: AsyncSession
+    session: AsyncSession, user_with_new_password: Users
 ) -> Users | InterfaceError:
     """
     Function. Deletes a user from the database by account ID.
@@ -97,121 +97,96 @@ async def change_user_password(
 
 
 @handling_interface_error
+@handling_integrity_error
 async def add_location(
-    location: FavoriteLocation, session: AsyncSession, target
-) -> FavoriteLocation | InterfaceError:
+    session: AsyncSession, new_location: Favorites | Wishlist, user: Users
+) -> Users:
     """
     Function. Adds a new location to the database.
-    :param location: location info
+    :param user: user information.
+    :param new_location: location info
     :param session: AsyncSession.
-    :param target: operation target (table name)
     :return: location info or an error.
-    """
-    if target == Tables.FAVORITES:
-        location_info = Favorites(**location.model_dump())
-    else:
-        location_info = Wishlist(**location.model_dump())
-
-    session.add(location_info)
-    await session.commit()
-
-    return location
-
-
-@handling_interface_error
-async def get_location(
-    session: AsyncSession, location_info: FavoriteLocation, target
-) -> Favorites | None:
-    """
-    Function. Fetches user's favorite location from favorites or wishlist from the database.
-    :param target: target table.
-    :param location_info: location information.
-    :param session: AsyncSession.
-    :return: favorite location info or an error.
-    """
-    if target == Tables.FAVORITES:
-        get_loc_info: Select = select(Favorites).filter(
-            Favorites.acc_id == location_info.acc_id
-        )
-    else:
-        get_loc_info: Select = (
-            select(Wishlist)
-            .where(Wishlist.acc_id == location_info.acc_id)
-            .where(Wishlist.loc_id == location_info.loc_id)
-        )
-
-    result: Result = await session.execute(get_loc_info)
-    location_info: Users = result.scalar()
-
-    return location_info if location_info else None
-
-
-@handling_interface_error
-async def update_location(
-    new_location: Favorites, session: AsyncSession
-) -> Favorites | InterfaceError:
-    """
-    Function. Updates user's favorite location.
-    :param new_location: new favorite location info.
-    :param session: AsyncSession.
-    :return: updated favorite location info or an error.
     """
     session.add(new_location)
     await session.commit()
+    await session.refresh(user)
 
-    return new_location
+    return user
+
+
+@handling_interface_error
+async def change_location(session: AsyncSession, user: Users) -> Users:
+    """
+    Function. Updates user's favorite location.
+    :param user: user information.
+    :param session: AsyncSession.
+    :return: updated favorite location info or an error.
+    """
+    session.add(user.favorites)
+    await session.commit()
+    await session.refresh(user)
+
+    return user
 
 
 @handling_interface_error
 async def delete_location(
-    session: AsyncSession, location_info: FavoriteLocation
-) -> FavoriteLocation | InterfaceError:
+    session: AsyncSession, location_info: FavoriteLocation, user_info
+) -> list[Wishlist]:
     """
     Function. Deletes user's favorite location from wishlist
+    :param user_info: user info.
     :param session: AsyncSession.
     :param location_info: location to delete.
     :return: location info or an error.
     """
     await session.execute(
         delete(Wishlist)
-        .where(Wishlist.acc_id == location_info.acc_id)
+        .where(Wishlist.acc_id == user_info.id)
         .where(Wishlist.loc_id == location_info.loc_id)
     )
     await session.commit()
-    return location_info
+    await session.refresh(user_info)
+
+    return user_info.users
 
 
 @handling_interface_error
 async def update_settings(
-    login: EmailStr,
+    session: AsyncSession,
+    user_info: Users,
     current_settings: CurrentSettings,
     hourly_settings: HourlySettings,
     daily_settings: DailySettings,
     user_settings: UserSettings,
-    session: AsyncSession,
-):
-    user_found: Users | InterfaceError | None = await get_user(
-        session, user_login=login
-    )
+) -> list[Current | Hourly | Daily | Settings]:
+    updated_settings: list[Current | Hourly | Daily | Settings] = []
 
     if user_settings:
-        user_found.settings.update_user_settings(
+        user_info.settings.update_user_settings(
             **user_settings.model_dump(exclude_none=True)
         )
-        session.add(user_found.settings)
+        session.add(user_info.settings)
+        updated_settings.append(user_info.settings)
 
     if current_settings:
-        user_found.current.update_current(
+        user_info.current.update_current(
             **current_settings.model_dump(exclude_none=True)
         )
-        session.add(user_found.current)
+        session.add(user_info.current)
+        updated_settings.append(user_info.current)
 
     if hourly_settings:
-        user_found.hourly.update_hourly(**hourly_settings.model_dump(exclude_none=True))
-        session.add(user_found.hourly)
+        user_info.hourly.update_hourly(**hourly_settings.model_dump(exclude_none=True))
+        session.add(user_info.hourly)
+        updated_settings.append(user_info.hourly)
 
     if daily_settings:
-        user_found.daily.update_daily(**daily_settings.model_dump(exclude_none=True))
-        session.add(user_found.daily)
+        user_info.daily.update_daily(**daily_settings.model_dump(exclude_none=True))
+        session.add(user_info.daily)
+        updated_settings.append(user_info.daily)
 
     await session.commit()
+
+    return updated_settings

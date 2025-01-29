@@ -26,10 +26,16 @@ def handling_integrity_error(func):
 def handling_interface_error(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
+        session = kwargs.get('session')
         try:
             return await func(*args, **kwargs)
         except InterfaceError as e:
             print(e)
+            session.rollback()
+            try:
+                return await func(*args, **kwargs)
+            except Exception as exc:
+                print(f"Reconnection failed: {exc}")
             return e
 
     return wrapper

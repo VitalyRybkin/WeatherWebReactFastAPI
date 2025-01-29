@@ -40,6 +40,20 @@ async def create_user(
     )
 
     if type(user_created) is Users:
+        user_settings: dict = {}
+        user_settings.update(
+            {user_created.settings.__tablename__: to_json(user_created.settings)}
+        )
+        user_settings.update(
+            {user_created.current.__tablename__: to_json(user_created.current)}
+        )
+        user_settings.update(
+            {user_created.daily.__tablename__: to_json(user_created.daily)}
+        )
+        user_settings.update(
+            {user_created.hourly.__tablename__: to_json(user_created.hourly)}
+        )
+
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content={
@@ -51,6 +65,7 @@ async def create_user(
                     "bot_id": user_created.bot_id,
                     "bot_name": user_created.bot_name,
                 },
+                "user_settings": user_settings,
             },
         )
 
@@ -67,7 +82,7 @@ async def create_user(
         )
 
     raise HTTPException(
-        status_code=status.HTTP_404_BAD_REQUEST,
+        status_code=status.HTTP_400_BAD_REQUEST,
         detail="Something went wrong.",
     )
 
@@ -93,12 +108,32 @@ async def login(
     )
 
     if type(user_logged_in) is Users:
-        settings = to_json(user_logged_in.settings)
-        daily = to_json(user_logged_in.daily)
-        current = to_json(user_logged_in.current)
-        hourly = to_json(user_logged_in.hourly)
-        favorite = to_json(user_logged_in.favorites)
-        wishlist: list = [to_json(item) for item in user_logged_in.users]
+        user_settings: dict = {}
+        user_settings.update(
+            {user_logged_in.settings.__tablename__: to_json(user_logged_in.settings)}
+        )
+        user_settings.update(
+            {user_logged_in.current.__tablename__: to_json(user_logged_in.current)}
+        )
+        user_settings.update(
+            {user_logged_in.daily.__tablename__: to_json(user_logged_in.daily)}
+        )
+        user_settings.update(
+            {user_logged_in.hourly.__tablename__: to_json(user_logged_in.hourly)}
+        )
+
+        if user_logged_in.favorites:
+            user_settings.update(
+                {
+                    user_logged_in.favorites.__tablename__: to_json(
+                        user_logged_in.favorites
+                    )
+                }
+            )
+
+        if user_logged_in.users:
+            wishlist: list = [to_json(item) for item in user_logged_in.users]
+            user_settings.update({"wishlist": wishlist})
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -111,12 +146,7 @@ async def login(
                     "dark_theme": user_logged_in.dark_theme,
                     "alert": user_logged_in.alert,
                 },
-                "settings": settings,
-                "favorite": favorite,
-                "wishlist": wishlist,
-                "current": current,
-                "hourly": hourly,
-                "daily": daily,
+                "user_settings": user_settings,
             },
         )
 
@@ -133,7 +163,7 @@ async def login(
         )
 
     raise HTTPException(
-        status_code=status.HTTP_404_BAD_REQUEST,
+        status_code=status.HTTP_400_BAD_REQUEST,
         detail="Something went wrong.",
     )
 
@@ -167,7 +197,7 @@ async def link_account(
         )
 
     raise HTTPException(
-        status_code=status.HTTP_404_BAD_REQUEST,
+        status_code=status.HTTP_400_BAD_REQUEST,
         detail="Something went wrong.",
     )
 
@@ -196,7 +226,7 @@ async def update_user_password(
             status_code=status.HTTP_200_OK,
             content={
                 "success": True,
-                "detail": "User password changed.",
+                "detail": "User password has changed.",
             },
         )
 
@@ -212,6 +242,6 @@ async def update_user_password(
         )
 
     raise HTTPException(
-        status_code=status.HTTP_404_BAD_REQUEST,
+        status_code=status.HTTP_400_BAD_REQUEST,
         detail="Something went wrong.",
     )
