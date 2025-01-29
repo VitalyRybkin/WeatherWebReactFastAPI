@@ -33,9 +33,7 @@ async def create_user(
     else:
         new_user.login = f"{uuid.uuid4()}@bot.com"
 
-    user_created: Users = await create_new_user(
-        session=session, user=new_user
-    )
+    user_created: Users = await create_new_user(session=session, user=new_user)
 
     return user_created
 
@@ -71,25 +69,27 @@ async def linking_accounts(
     :return: whether user's accounts were linked or an error on linking accounts
     """
 
-    web_user_found: Users | InterfaceError | None = await get_user(
+    web_user_info: Users | InterfaceError | None = await get_user(
         session=session, user_login=user.login
     )
-    bot_user_found: Users | InterfaceError | None = await get_user(
+    bot_user_info: Users | InterfaceError | None = await get_user(
         session=session, bot_name=user.bot_name
     )
 
-    if not bot_user_found:
+    if not bot_user_info:
         return None
 
-    if type(bot_user_found) is Users and type(web_user_found) is Users:
-        web_user_found.bot_id = bot_user_found.bot_id
-        web_user_found.bot_name = bot_user_found.bot_name
+    if type(bot_user_info) is Users and type(web_user_info) is Users:
+        web_user_info.bot_id = bot_user_info.bot_id
+        web_user_info.bot_name = bot_user_info.bot_name
 
-        web_user_found: Users | InterfaceError = await link_user_accounts(
-            session=session, web_user=web_user_found, bot_user=bot_user_found,
+        web_user_info: Users | InterfaceError = await link_user_accounts(
+            session=session,
+            web_user=web_user_info,
+            bot_user=bot_user_info,
         )
 
-    return web_user_found
+    return web_user_info
 
 
 async def change_password(
@@ -101,12 +101,17 @@ async def change_password(
     :param session: AsyncSession
     :return: new user information, an error on new password, None if user was not found
     """
-    user_found: Users | InterfaceError | None = await get_user(
+    user_info: Users | InterfaceError | None = await get_user(
         session=session, user_login=user.login
     )
 
-    if type(user_found) is Users and user_found.verify_password(user.password.encode()):
-        user_found.password = Users.hash_password(user.new_password)
-        return await change_user_password(session=session, user_with_new_password=user_found)
-    else:
-        return None
+    if type(user_info) is Users:
+        if user_info.verify_password(user.password.encode()):
+            user_info.password = Users.hash_password(user.new_password)
+            user_info: Users = await change_user_password(
+                session=session, user_with_new_password=user_info
+            )
+        else:
+            return None
+
+    return user_info

@@ -8,7 +8,11 @@ def to_json(table):
     Function. Convert table to json
     """
     if table:
-        return {col.name: getattr(table, col.name) for col in table.__table__.columns if col.name not in ["id", "acc_id"]}
+        return {
+            col.name: getattr(table, col.name)
+            for col in table.__table__.columns
+            if col.name not in ["id", "acc_id"]
+        }
 
 
 def handling_integrity_error(func):
@@ -26,12 +30,13 @@ def handling_integrity_error(func):
 def handling_interface_error(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
-        session = kwargs.get('session')
+        session = kwargs.get("session")
         try:
             return await func(*args, **kwargs)
         except InterfaceError as e:
             print(e)
             session.rollback()
+            session.flush()
             try:
                 return await func(*args, **kwargs)
             except Exception as exc:

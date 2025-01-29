@@ -5,7 +5,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from models import Wishlist, Users, Current, Hourly, Daily, Settings
+from models import Users, Current, Hourly, Daily, Settings
 from models.tables import Tables
 from users.settings_controller import (
     update_user_location,
@@ -139,13 +139,14 @@ async def remove_user_location(
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
-    user_locations: list[Wishlist] = await delete_user_location(
+    user_locations: Users = await delete_user_location(
         login=login, location_info=location, session=session
     )
 
-    if isinstance(user_locations, list):
+    # TODO add remove from favorites
+    if isinstance(user_locations, Users):
         wishlist: list = []
-        for loc in user_locations:
+        for loc in user_locations.users:
             wishlist.append(to_json(loc))
 
         return JSONResponse(
@@ -156,7 +157,7 @@ async def remove_user_location(
                 "wishlist": wishlist,
             },
         )
-    elif isinstance(user_locations, InterfaceError):
+    if user_locations is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error. User favorite location could not be removed.",
@@ -181,6 +182,7 @@ async def update_user_weather_settings(
         Current | Hourly | Daily | Settings
     ] = await update_user_settings(login, current, hourly, daily, settings, session)
 
+    # TODO add update bot settings
     if settings_updated is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

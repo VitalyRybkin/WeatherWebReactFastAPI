@@ -49,7 +49,6 @@ async def get_user(
     :param bot_name: bot name
     :return: user info if successful or an error.
     """
-    # TODO handle interface error in controllers call
     if user_login:
         get_user_info: Select = select(Users).filter(Users.login == user_login)
     else:
@@ -92,6 +91,7 @@ async def change_user_password(
 
     session.add(user_with_new_password)
     await session.commit()
+    await session.refresh(user_with_new_password)
 
     return user_with_new_password
 
@@ -133,7 +133,7 @@ async def change_location(session: AsyncSession, user: Users) -> Users:
 @handling_interface_error
 async def delete_location(
     session: AsyncSession, location_info: FavoriteLocation, user_info
-) -> list[Wishlist]:
+) -> Users:
     """
     Function. Deletes user's favorite location from wishlist
     :param user_info: user info.
@@ -149,7 +149,7 @@ async def delete_location(
     await session.commit()
     await session.refresh(user_info)
 
-    return user_info.users
+    return user_info
 
 
 @handling_interface_error

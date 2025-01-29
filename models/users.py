@@ -37,23 +37,35 @@ class Users(AbstractBaseModel):
 
     login: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column(nullable=True)
+    # TODO check for timezone
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now(timezone.utc)
     )
-    #TODO change deleted to email_confirmed
+    # TODO change deleted to email_confirmed
     deleted: Mapped[bool] = False
     bot_id: Mapped[int] = mapped_column(nullable=True)
     bot_name: Mapped[str] = mapped_column(String(50), nullable=True)
     dark_theme: Mapped[bool] = mapped_column(default=False)
+    # TODO add json by default
     alert = Column(mutable_json_type(dbtype=JSONB))
 
-    #TODO change users to wishlist
-    users = relationship("Wishlist", back_populates="parent", uselist=True, lazy="joined")
-    favorites = relationship("Favorites", back_populates="parent", uselist=False, lazy="joined")
-    settings = relationship("Settings", back_populates="parent", uselist=False, lazy="joined")
-    hourly = relationship("Hourly", back_populates="parent", uselist=False, lazy="joined")
+    # TODO change users to wishlist
+    users = relationship(
+        "Wishlist", back_populates="parent", uselist=True, lazy="joined"
+    )
+    favorites = relationship(
+        "Favorites", back_populates="parent", uselist=False, lazy="joined"
+    )
+    settings = relationship(
+        "Settings", back_populates="parent", uselist=False, lazy="joined"
+    )
+    hourly = relationship(
+        "Hourly", back_populates="parent", uselist=False, lazy="joined"
+    )
     daily = relationship("Daily", back_populates="parent", uselist=False, lazy="joined")
-    current = relationship("Current", back_populates="parent", uselist=False, lazy="joined")
+    current = relationship(
+        "Current", back_populates="parent", uselist=False, lazy="joined"
+    )
 
     @classmethod
     def hash_password(cls, password: str) -> str:
@@ -66,7 +78,6 @@ class Users(AbstractBaseModel):
         password = password.encode("utf-8")
         hashed = bcrypt.hashpw(password, salt)
         return hashed.decode("utf8")
-
 
     def verify_password(self, password: bytes):
         """

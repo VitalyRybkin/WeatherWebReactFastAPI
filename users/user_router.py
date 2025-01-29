@@ -180,9 +180,16 @@ async def link_account(
     :return: whether the user's accounts were successfully linked or not (HTTP error)
     """
 
+    # TODO change logic and response
     account_linked: Users | None = await linking_accounts(
         user=user_link_info, session=session
     )
+
+    if account_linked is InterfaceError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database connection error. Accounts could not be linktd.",
+        )
 
     if account_linked:
         return JSONResponse(
@@ -190,9 +197,9 @@ async def link_account(
             content={"success": True, "detail": "Accounts linked."},
         )
 
-    if not account_linked:
+    if account_linked is None:
         raise HTTPException(
-            status_code=status.HTTP_204_NO_CONTENT,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Account could not be linked. Bot user not found.",
         )
 
@@ -235,6 +242,7 @@ async def update_user_password(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"detail": "Incorrect password."},
         )
+
     if type(user_password_changed) is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

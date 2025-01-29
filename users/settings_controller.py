@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Type, Any, Coroutine
 
 from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
@@ -10,7 +10,8 @@ from users.crud import (
     change_location,
     add_location,
     delete_location,
-    update_settings, get_user,
+    update_settings,
+    get_user,
 )
 from utils import to_json
 from utils.setting_schemas import (
@@ -23,7 +24,10 @@ from utils.setting_schemas import (
 
 
 async def add_new_location(
-    user_login:EmailStr, location_info: FavoriteLocation, session: AsyncSession, target: str
+    user_login: EmailStr,
+    location_info: FavoriteLocation,
+    session: AsyncSession,
+    target: str,
 ) -> Type[IntegrityError] | Users:
     """
     Function. Handling adding new location to database.
@@ -35,25 +39,30 @@ async def add_new_location(
     """
     user_info: Users = await get_user(session=session, user_login=user_login)
 
-    if target == Tables.WISHLIST:
-        for loc in user_info.users:
-            loc_info = to_json(loc)
-            if loc_info["loc_id"] == location_info.loc_id:
-                return IntegrityError
-        location_to_add: Wishlist = Wishlist(**location_info.model_dump(exclude_unset=True))
-    else:
-        location_to_add: Favorites = Favorites(**location_info.model_dump(exclude_unset=True))
+    if isinstance(user_info, Users):
+        if target == Tables.WISHLIST:
+            for loc in user_info.users:
+                loc_info = to_json(loc)
+                if loc_info["loc_id"] == location_info.loc_id:
+                    return IntegrityError
+            location_to_add: Wishlist = Wishlist(
+                **location_info.model_dump(exclude_unset=True)
+            )
+        else:
+            location_to_add: Favorites = Favorites(
+                **location_info.model_dump(exclude_unset=True)
+            )
 
-    location_to_add.acc_id = user_info.id
-    location_added: Users = await add_location(
-        session=session, new_location=location_to_add, user=user_info
-    )
+        location_to_add.acc_id = user_info.id
+        user_info: Users = await add_location(
+            session=session, new_location=location_to_add, user=user_info
+        )
 
-    return location_added
+    return user_info
 
 
 async def update_user_location(
-        user_login:EmailStr, location_info: FavoriteLocation, session: AsyncSession
+    user_login: EmailStr, location_info: FavoriteLocation, session: AsyncSession
 ) -> Users:
     """
     Function. Handling updating user location.
@@ -64,17 +73,18 @@ async def update_user_location(
     """
     user_info: Users = await get_user(session=session, user_login=user_login)
 
-    user_info.favorites.update_location(**location_info.model_dump(exclude_unset=True))
-    # if user_info is Users:
-    #     return await change_location(session=session, location=user_info.favorites, new_location=location_info)
-    # else:
-    #     return InterfaceError
-    user_info: Users = await change_location(session=session, user=user_info)
+    if isinstance(user_info, Users):
+        user_info.favorites.update_location(
+            **location_info.model_dump(exclude_unset=True)
+        )
+        user_info: Users = await change_location(session=session, user=user_info)
+
     return user_info
+
 
 async def delete_user_location(
     login, location_info: FavoriteLocation, session: AsyncSession
-) -> list[Wishlist] | InterfaceError:
+) -> Users:
     """
     Function. Handling deleting user location from wishlist.
     :param login: user login.
@@ -84,11 +94,12 @@ async def delete_user_location(
     """
     user_info: Users = await get_user(session, login)
 
-    wishlist_locations: list[Wishlist] = await delete_location(
-        session=session, location_info=location_info, user_info=user_info
-    )
+    if isinstance(user_info, Users):
+        user_info: Users = await delete_location(
+            session=session, location_info=location_info, user_info=user_info
+        )
 
-    return wishlist_locations
+    return user_info
 
 
 async def update_user_settings(
@@ -98,17 +109,22 @@ async def update_user_settings(
     daily: DailySettings,
     settings: UserSettings,
     session: AsyncSession,
-) -> list[Current | Hourly | Daily | Settings]:
+) -> list[Current | Hourly | Daily | Settings] | InterfaceError | None:
     user_info: Users | InterfaceError | None = await get_user(
         session=session, user_login=login
     )
 
-    settings_updated: list[Current | Hourly | Daily | Settings] = await update_settings(
-        session=session,
-        user_info=user_info,
-        current_settings=current,
-        hourly_settings=hourly,
-        daily_settings=daily,
-        user_settings=settings
-    )
-    return settings_updated
+    if isinstance(user_info, Users):
+        settings_updated: list[
+            Current | Hourly | Daily | Settings
+        ] = await update_settings(
+            session=session,
+            user_info=user_info,
+            current_settings=current,
+            hourly_settings=hourly,
+            daily_settings=daily,
+            user_settings=settings,
+        )
+        return settings_updated
+
+    return user_info
