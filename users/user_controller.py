@@ -61,14 +61,13 @@ async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
 
 async def linking_accounts(
     user: UserAccountsLink, session: AsyncSession
-) -> Users | None:
+) -> Users | InterfaceError | None:
     """
     Function. Handling of user's accounts linkage.'
     :param user: user accounts information (login, bot_name)
     :param session: AsyncSession
     :return: whether user's accounts were linked or an error on linking accounts
     """
-    # TODO add interface error
     web_user_info: Users | InterfaceError | None = await get_user(
         session=session, user_login=user.login
     )

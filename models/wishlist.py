@@ -20,6 +20,7 @@ class Wishlist(AbstractBaseModel):
         favorite location country.
 
     """
+
     __tablename__ = Tables.WISHLIST
 
     users = Tables.USERS
@@ -38,7 +39,7 @@ class Wishlist(AbstractBaseModel):
 
     parent = relationship(
         f"{users.title()}",
-        back_populates="users",
+        back_populates="wishlist",
         cascade="all, delete",
     )
 

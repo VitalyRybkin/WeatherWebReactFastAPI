@@ -46,11 +46,9 @@ class Users(AbstractBaseModel):
     bot_id: Mapped[int] = mapped_column(nullable=True)
     bot_name: Mapped[str] = mapped_column(String(50), nullable=True)
     dark_theme: Mapped[bool] = mapped_column(default=False)
-    # TODO add json by default
-    alert = Column(mutable_json_type(dbtype=JSONB))
+    alert = Column(mutable_json_type(dbtype=JSONB), default={})
 
-    # TODO change users to wishlist
-    users = relationship(
+    wishlist = relationship(
         "Wishlist", back_populates="parent", uselist=True, lazy="joined"
     )
     favorites = relationship(

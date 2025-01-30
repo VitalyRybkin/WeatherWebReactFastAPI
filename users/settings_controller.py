@@ -41,7 +41,7 @@ async def add_new_location(
 
     if isinstance(user_info, Users):
         if target == Tables.WISHLIST:
-            for loc in user_info.users:
+            for loc in user_info.wishlist:
                 loc_info = to_json(loc)
                 if loc_info["loc_id"] == location_info.loc_id:
                     return IntegrityError

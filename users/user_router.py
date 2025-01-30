@@ -35,24 +35,22 @@ async def create_user(
     :return: whether the user was successfully created or not (HTTP error)
     """
 
-    user_created: Users | IntegrityError | InterfaceError = (
+    new_user: Users | IntegrityError | InterfaceError = (
         await user_controller.create_user(session=session, new_user=new_user)
     )
 
-    if type(user_created) is Users:
+    if type(new_user) is Users:
         user_settings: dict = {}
         user_settings.update(
-            {user_created.settings.__tablename__: to_json(user_created.settings)}
+            {new_user.settings.__tablename__: to_json(new_user.settings)}
         )
         user_settings.update(
-            {user_created.current.__tablename__: to_json(user_created.current)}
+            {new_user.current.__tablename__: to_json(new_user.current)}
         )
-        user_settings.update(
-            {user_created.daily.__tablename__: to_json(user_created.daily)}
-        )
-        user_settings.update(
-            {user_created.hourly.__tablename__: to_json(user_created.hourly)}
-        )
+        user_settings.update({new_user.daily.__tablename__: to_json(new_user.daily)})
+        user_settings.update({new_user.hourly.__tablename__: to_json(new_user.hourly)})
+
+        # TODO add email notification
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
@@ -60,22 +58,24 @@ async def create_user(
                 "success": True,
                 "detail": "User created.",
                 "user": {
-                    "id": user_created.id,
-                    "login": user_created.login,
-                    "bot_id": user_created.bot_id,
-                    "bot_name": user_created.bot_name,
+                    "id": new_user.id,
+                    "login": new_user.login,
+                    "bot_id": new_user.bot_id,
+                    "bot_name": new_user.bot_name,
+                    "alert": new_user.alert,
+                    # "email_confirmed": new_user.email_confirmed
                 },
                 "user_settings": user_settings,
             },
         )
 
-    if type(user_created) is IntegrityError:
+    if type(new_user) is IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User could not be created. User already exists.",
         )
 
-    if type(user_created) is InterfaceError:
+    if type(new_user) is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error. User could not be created.",
@@ -101,38 +101,34 @@ async def login(
     :return: whether the user was successfully logged in or not (HTTP error)
     """
 
-    user_logging_in: UserLogin = UserLogin(login=user_login, password=user_password)
+    user_to_log_in: UserLogin = UserLogin(login=user_login, password=user_password)
 
-    user_logged_in: Users | InterfaceError | None = await user_logging(
-        user=user_logging_in, session=session
+    logged_user: Users | InterfaceError | None = await user_logging(
+        user=user_to_log_in, session=session
     )
 
-    if type(user_logged_in) is Users:
+    if type(logged_user) is Users:
         user_settings: dict = {}
         user_settings.update(
-            {user_logged_in.settings.__tablename__: to_json(user_logged_in.settings)}
+            {logged_user.settings.__tablename__: to_json(logged_user.settings)}
         )
         user_settings.update(
-            {user_logged_in.current.__tablename__: to_json(user_logged_in.current)}
+            {logged_user.current.__tablename__: to_json(logged_user.current)}
         )
         user_settings.update(
-            {user_logged_in.daily.__tablename__: to_json(user_logged_in.daily)}
+            {logged_user.daily.__tablename__: to_json(logged_user.daily)}
         )
         user_settings.update(
-            {user_logged_in.hourly.__tablename__: to_json(user_logged_in.hourly)}
+            {logged_user.hourly.__tablename__: to_json(logged_user.hourly)}
         )
 
-        if user_logged_in.favorites:
+        if logged_user.favorites:
             user_settings.update(
-                {
-                    user_logged_in.favorites.__tablename__: to_json(
-                        user_logged_in.favorites
-                    )
-                }
+                {logged_user.favorites.__tablename__: to_json(logged_user.favorites)}
             )
 
-        if user_logged_in.users:
-            wishlist: list = [to_json(item) for item in user_logged_in.users]
+        if logged_user.wishlist:
+            wishlist: list = [to_json(item) for item in logged_user.wishlist]
             user_settings.update({"wishlist": wishlist})
 
         return JSONResponse(
@@ -141,22 +137,22 @@ async def login(
                 "success": True,
                 "detail": "User logged in",
                 "user": {
-                    "id": user_logged_in.id,
-                    "login": user_logged_in.login,
-                    "dark_theme": user_logged_in.dark_theme,
-                    "alert": user_logged_in.alert,
+                    "id": logged_user.id,
+                    "login": logged_user.login,
+                    "dark_theme": logged_user.dark_theme,
+                    "alert": logged_user.alert,
                 },
                 "user_settings": user_settings,
             },
         )
 
-    if type(user_logged_in) is InterfaceError:
+    if type(logged_user) is InterfaceError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error. User could not be logged in.",
         )
 
-    if not user_logged_in:
+    if not logged_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password.",
@@ -181,7 +177,7 @@ async def link_account(
     """
 
     # TODO what if already linked
-    #TODO verify bot account to be linked
+    # TODO verify bot account to be linked
     account_linked: Users | None = await linking_accounts(
         user=user_link_info, session=session
     )

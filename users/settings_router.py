@@ -70,7 +70,7 @@ async def add_new_user_location(
 
     if target == "wishlist":
         wishlist: list = []
-        for loc in user_info.users:
+        for loc in user_info.wishlist:
             wishlist.append(to_json(loc))
 
         return JSONResponse(
@@ -143,10 +143,9 @@ async def remove_user_location(
         login=login, location_info=location, session=session
     )
 
-    # TODO add remove from favorites
     if isinstance(user_locations, Users):
         wishlist: list = []
-        for loc in user_locations.users:
+        for loc in user_locations.wishlist:
             wishlist.append(to_json(loc))
 
         return JSONResponse(
