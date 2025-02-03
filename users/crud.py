@@ -3,7 +3,7 @@ from sqlalchemy import insert, select, Select, Result, delete
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
+from models import Users, Current, Daily, Hourly, UserSettings, Favorites, Wishlist
 from utils.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
@@ -31,7 +31,7 @@ async def create_new_user(session, user) -> Users:
     await session.execute(insert(Current).values(acc_id=user.id))
     await session.execute(insert(Daily).values(acc_id=user.id))
     await session.execute(insert(Hourly).values(acc_id=user.id))
-    await session.execute(insert(Settings).values(acc_id=user.id))
+    await session.execute(insert(UserSettings).values(acc_id=user.id))
     await session.commit()
     await session.refresh(user)
 
@@ -160,8 +160,8 @@ async def update_settings(
     hourly_settings: HourlySettings,
     daily_settings: DailySettings,
     user_settings: UserSettings,
-) -> list[Current | Hourly | Daily | Settings]:
-    updated_settings: list[Current | Hourly | Daily | Settings] = []
+) -> list[Current | Hourly | Daily | UserSettings]:
+    updated_settings: list[Current | Hourly | Daily | UserSettings] = []
 
     if user_settings:
         user_info.settings.update_user_settings(

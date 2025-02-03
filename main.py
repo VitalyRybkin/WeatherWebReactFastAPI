@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
+from api_v1.views import location_router
 from models import AbstractBaseModel
 from users.user_router import user_router
 from users.settings_router import settings_router
@@ -19,6 +20,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan, root_path="/app")
 app.include_router(user_router, tags=["users"])
 app.include_router(settings_router, tags=["settings"])
+
+app.include_router(location_router, tags=["locations"])
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from models import Users, Current, Hourly, Daily, Settings
+from models import Users, Current, Hourly, Daily, UserSettings
 from models.tables import Tables
 from users.settings_controller import (
     update_user_location,
@@ -179,7 +179,7 @@ async def update_user_weather_settings(
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
     settings_updated: list[
-        Current | Hourly | Daily | Settings
+        Current | Hourly | Daily | UserSettings
     ] = await update_user_settings(
         login, bot_name, current, hourly, daily, settings, session
     )

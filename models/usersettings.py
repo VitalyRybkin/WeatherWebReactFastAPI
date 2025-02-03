@@ -5,7 +5,7 @@ from models import AbstractBaseModel
 from models.tables import Tables
 
 
-class Settings(AbstractBaseModel):
+class UserSettings(AbstractBaseModel):
     """
     SQLAlchemy user settings model
     Attributes

@@ -41,3 +41,5 @@ export PATH="$(brew --prefix python)/libexec/bin:$PATH"
 
 error: invalid object 100644 b2ca6a051f1fa9272ffb6dc432e4963743d820ff for 'models/users.py'
 git hash-object -w models/users.py 
+
+celery -A celery_tasks.run_celery worker -E --loglevel INFO

@@ -5,8 +5,10 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 
-from utils.settings import settings
+
 from asyncio import current_task
+
+from utils.settings import settings
 
 
 class DatabaseEngine:
