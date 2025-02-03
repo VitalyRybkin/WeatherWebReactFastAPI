@@ -49,3 +49,14 @@ class UserSettings(BaseModel):
     current: bool
     daily: int
     hourly: int
+
+class LocationPublic(BaseModel):
+    """
+    Pydentic model for user location information
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    id: int
+    name: Annotated[str, MaxLen(100)]
+    region: Annotated[str, MaxLen(100)]
+    country: Annotated[str, MaxLen(100)]

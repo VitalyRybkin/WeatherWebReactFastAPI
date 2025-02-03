@@ -21,7 +21,7 @@ pydentic = "^0.0.1.dev3"
 flower = "^2.0.1"
 redis = "^5.2.1"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
