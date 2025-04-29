@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "weatherwebreactfastapi"
+version = "0.1.0"
+description = "weatherapp API"
+authors = ["vitaly <vitaly.rybkin@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+uvicorn = "^0.34.0"
+sqlalchemy = "^2.0.37"
+bcrypt = "^4.2.1"
+sqlalchemy-json = "^0.7.0"
+pydantic-settings = "^2.7.1"
+asyncpg = "^0.30.0"
+celery = {extras = ["redis"], version = "^5.5.0"}
+requests = "^2.32.3"
+pydentic = "^0.0.1.dev3"
+flower = "^2.0.1"
+redis = "^5.2.1"
+black = "^25.1.0"
+alembic = "^1.15.2"
+pydantic = {extras = ["email"], version = "^2.11.3"}
+ipython = "^9.1.0"
+fastapi = "^0.115.12"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
