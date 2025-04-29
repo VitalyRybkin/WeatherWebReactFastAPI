@@ -125,6 +125,13 @@ def exclude_fields(
     daily: DailySettings = None,
     hourly: HourlySettings = None,
 ) -> Set[str]:
+    """
+    Function: Set of excluded fields from validation using user settings
+    :param current: current user settings
+    :param daily: daily user settings
+    :param hourly: hourly user settings
+    :return: Set of excluded fields
+    """
     excluded_fields: Set[str] = set()
 
     if current:
