@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import Any, List, Dict, Set
 
 from celery_tasks.tasks import location_by_name, get_forecast
-from utils.setting_schemas import (
+from schemas.setting_schemas import (
     LocationPublic,
     CurrentSettings,
     DailySettings,
     HourlySettings,
 )
-from utils.weather_schemas import (
+from schemas.weather_schemas import (
     CurrentWeatherMetric,
     CurrentWeatherBritish,
     exclude_fields,

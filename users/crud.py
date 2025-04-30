@@ -6,7 +6,7 @@ from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Users, Current, Daily, Hourly, UserSettings, Favorites, Wishlist
-from utils.setting_schemas import (
+from schemas.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
     HourlySettings,

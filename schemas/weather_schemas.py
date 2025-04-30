@@ -2,7 +2,7 @@ from typing import Dict, Set, Any
 
 from pydantic import BaseModel, ConfigDict
 
-from utils.setting_schemas import CurrentSettings, DailySettings, HourlySettings
+from schemas.setting_schemas import CurrentSettings, DailySettings, HourlySettings
 
 
 class CurrentInfo(BaseModel):

@@ -10,7 +10,7 @@ from users.crud import (
     link_user_accounts,
     change_user_password,
 )
-from utils.user_schemas import (
+from schemas.user_schemas import (
     UserCreate,
     UserLogin,
     UserAccountsLink,

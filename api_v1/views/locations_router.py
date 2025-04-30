@@ -8,7 +8,7 @@ from api_v1.views.location_controller import (
     get_locations,
     get_location_weather,
 )
-from utils.setting_schemas import (
+from schemas.setting_schemas import (
     UserSettings,
     CurrentSettings,
     HourlySettings,

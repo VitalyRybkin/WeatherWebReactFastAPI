@@ -13,7 +13,7 @@ from users.crud import (
     get_user,
 )
 from utils import to_json
-from utils.setting_schemas import (
+from schemas.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
     HourlySettings,

@@ -14,7 +14,7 @@ from users.settings_controller import (
     update_user_settings,
 )
 from utils import db_engine, to_json
-from utils.setting_schemas import (
+from schemas.setting_schemas import (
     FavoriteLocation,
     UserSettings,
     CurrentSettings,

@@ -12,7 +12,7 @@ __all__ = (
     "handling_interface_error",
 )
 
-from .user_schemas import (
+from schemas.user_schemas import (
     UserCreate,
     UserLogin,
     UserAccountsLink,
@@ -20,7 +20,7 @@ from .user_schemas import (
     UserPublic,
     UserTelegram,
 )
-from .setting_schemas import FavoriteLocation
+from schemas.setting_schemas import FavoriteLocation
 from .db_engine import db_engine
 from .utils import to_json, handling_integrity_error
 from .utils import to_json, handling_interface_error
