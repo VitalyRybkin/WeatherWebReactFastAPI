@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List, Dict, Set
+from typing import Any, List, Dict
 
 from celery_tasks.tasks import location_by_name, get_forecast
 from schemas.setting_schemas import (
@@ -23,10 +23,6 @@ from schemas.weather_schemas import (
 def get_locations(location_name: str) -> List[dict[str, Any]] | None:
     result = location_by_name.apply_async(args=[location_name])
 
-    # locations_list: list[dict[str, Any]] = []
-    # for location in result.get():
-    #     locations_list.append(LocationPublic(**location).model_dump())
-    # return locations_list
     return [LocationPublic(**location).model_dump() for location in result.get()]
 
 
@@ -55,24 +51,22 @@ def get_location_weather(
     weather_forecast = get_forecast.apply_async(args=[location_id, amount_of_days])
     location_weather: Dict[str, Any] = weather_forecast.get()
 
-    fields_filter: Set[str] = exclude_fields(current=current_settings)
-
     # Current weather filtering based on user settings.
 
     current_weather_filter: Dict[str, Any] = (
         CurrentWeatherMetric(**location_weather["current"]).model_dump(
-            exclude=fields_filter
+            exclude=exclude_fields(current=current_settings)
         )
         if units == "C"
         else CurrentWeatherBritish(**location_weather["current"]).model_dump(
-            exclude=fields_filter
+            exclude=exclude_fields(current=current_settings)
         )
     )
 
     location_weather["current"] = current_weather_filter
 
     forecast_day: list[DailyWeather] = []
-    forecast_hour: list = []
+    forecast_hour_list: list = []
 
     local_time: datetime = datetime.strptime(
         location_weather["location"]["localtime"], "%Y-%m-%d %H:%M"
@@ -80,38 +74,43 @@ def get_location_weather(
 
     # Daily weather filtering based on user settings.
 
-    fields_filter = exclude_fields(daily=daily_settings)
-
     for day in range(amount_of_days):
         daily_weather_filter: Dict[str, Any] = (
             DailyWeatherMetric(
                 **location_weather["forecast"]["forecastday"][day]["day"]
-            ).model_dump(exclude=fields_filter)
+            ).model_dump(exclude=exclude_fields(daily=daily_settings))
             if units == "C"
             else DailyWeatherBritish(
                 **location_weather["forecast"]["forecastday"][day]["day"]
-            ).model_dump(exclude=fields_filter)
+            ).model_dump(exclude=exclude_fields(daily=daily_settings))
         )
         day_weather: DailyWeather = DailyWeather(
             date=location_weather["forecast"]["forecastday"][day]["date"],
             day=daily_weather_filter,
             astro=location_weather["forecast"]["forecastday"][day]["astro"],
         )
-        forecast_day.append(day_weather.model_dump(exclude=fields_filter))
-        forecast_hour.extend(location_weather["forecast"]["forecastday"][day]["hour"])
+        forecast_day.append(
+            day_weather.model_dump(exclude=exclude_fields(daily=daily_settings))
+        )
+        forecast_hour_list.extend(
+            location_weather["forecast"]["forecastday"][day]["hour"]
+        )
 
     location_weather["forecast"]["forecastday"] = forecast_day
 
     # Hourly weather filtering based on user settings.
 
-    fields_filter = exclude_fields(hourly=hourly_settings)
     location_weather["forecast"]["forecasthour"] = []
 
-    for hour in forecast_hour[local_time.hour : local_time.hour + amount_of_hours]:
+    for hour in forecast_hour_list[local_time.hour : local_time.hour + amount_of_hours]:
         hour_weather_filter: Dict[str, Any] = (
-            HourlyWeatherMetric(**hour).model_dump(exclude=fields_filter)
+            HourlyWeatherMetric(**hour).model_dump(
+                exclude=exclude_fields(hourly=hourly_settings)
+            )
             if units == "C"
-            else HourlyWeatherBritish(**hour).model_dump(exclude=fields_filter)
+            else HourlyWeatherBritish(**hour).model_dump(
+                exclude=exclude_fields(hourly=hourly_settings)
+            )
         )
 
         location_weather["forecast"]["forecasthour"].append(hour_weather_filter)

@@ -28,14 +28,15 @@ def get_location_by_name(location_name: str) -> JSONResponse:
     :param location_name: location name string.
     :return: List of locations found.
     """
-    locations: list[dict[str, Any]] | None = get_locations(location_name)
-    if locations:
+    locations_found: list[dict[str, Any]] | None = get_locations(location_name)
+
+    if locations_found:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
                 "success": True,
                 "detail": "Locations found",
-                "locations": locations,
+                "locations": locations_found,
             },
         )
     else:
