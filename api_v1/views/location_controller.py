@@ -15,6 +15,8 @@ from utils.weather_schemas import (
     DailyWeatherBritish,
     DailyWeatherMetric,
     DailyWeather,
+    HourlyWeatherMetric,
+    HourlyWeatherBritish,
 )
 
 
@@ -38,7 +40,7 @@ def get_location_weather(
     amount_of_hours: int,
 ) -> Dict[str, Any] | None:
     """
-    Function. Fetch current weather depending on the current weather units and user settings.
+    Function. Fetch weather data for a given location bsed on user settings.
     :param hourly_settings: hourly user settings
     :param daily_settings: daily user settings
     :param amount_of_hours:  hours of forecast
@@ -48,12 +50,14 @@ def get_location_weather(
     :param units: current weather units
     :return: current weather data
     """
-    # TODO if no answer from server
+    # TODO retry logic
 
     weather_forecast = get_forecast.apply_async(args=[location_id, amount_of_days])
     location_weather: Dict[str, Any] = weather_forecast.get()
 
     fields_filter: Set[str] = exclude_fields(current=current_settings)
+
+    # Current weather filtering based on user settings.
 
     current_weather_filter: Dict[str, Any] = (
         CurrentWeatherMetric(**location_weather["current"]).model_dump(
@@ -73,6 +77,8 @@ def get_location_weather(
     local_time: datetime = datetime.strptime(
         location_weather["location"]["localtime"], "%Y-%m-%d %H:%M"
     )
+
+    # Daily weather filtering based on user settings.
 
     fields_filter = exclude_fields(daily=daily_settings)
 
@@ -96,10 +102,18 @@ def get_location_weather(
 
     location_weather["forecast"]["forecastday"] = forecast_day
 
-    fields_filter = exclude_fields(hourly=hourly_settings)
+    # Hourly weather filtering based on user settings.
 
-    location_weather["forecast"]["forecasthour"] = forecast_hour[
-        local_time.hour : local_time.hour + amount_of_hours
-    ]
+    fields_filter = exclude_fields(hourly=hourly_settings)
+    location_weather["forecast"]["forecasthour"] = []
+
+    for hour in forecast_hour[local_time.hour : local_time.hour + amount_of_hours]:
+        hour_weather_filter: Dict[str, Any] = (
+            HourlyWeatherMetric(**hour).model_dump(exclude=fields_filter)
+            if units == "C"
+            else HourlyWeatherBritish(**hour).model_dump(exclude=fields_filter)
+        )
+
+        location_weather["forecast"]["forecasthour"].append(hour_weather_filter)
 
     return location_weather
