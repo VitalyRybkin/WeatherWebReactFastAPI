@@ -65,10 +65,10 @@ async def add_new_user_location(
     if user_info is IntegrityError or type(user_info) is IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Location could not be added. User favorite location already exists.",
+            detail="Location could not be added. Location already exists.",
         )
 
-    if target == "wishlist":
+    if target == "wishlist" and user_info.wishlist:
         wishlist: list = []
         for loc in user_info.wishlist:
             wishlist.append(to_json(loc))
@@ -139,7 +139,7 @@ async def remove_user_location(
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
-    user_locations: Users = await delete_user_location(
+    user_locations: Users | InterfaceError = await delete_user_location(
         login=login, location_info=location, session=session
     )
 
@@ -178,10 +178,10 @@ async def update_user_weather_settings(
     settings: UserSettings | None = None,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse:
-    settings_updated: list[
-        Current | Hourly | Daily | UserSettings
-    ] = await update_user_settings(
-        login, bot_name, current, hourly, daily, settings, session
+    settings_updated: list[Current | Hourly | Daily | UserSettings] | InterfaceError = (
+        await update_user_settings(
+            login, bot_name, current, hourly, daily, settings, session
+        )
     )
 
     if settings_updated is InterfaceError:

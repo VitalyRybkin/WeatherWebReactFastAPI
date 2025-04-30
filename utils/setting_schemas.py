@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List, Literal
 
 from annotated_types import MaxLen
 from pydantic import BaseModel, ConfigDict
@@ -40,15 +40,19 @@ class CurrentSettings(WeatherSettings):
 
 class DailySettings(WeatherSettings):
     model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    wind_extended: bool
     astro: bool
 
 
 class UserSettings(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    current: bool
-    daily: int
-    hourly: int
+    current: bool = True
+    daily: int = 3
+    hourly: int = 8
+    units: str = "F"
+
 
 class LocationPublic(BaseModel):
     """

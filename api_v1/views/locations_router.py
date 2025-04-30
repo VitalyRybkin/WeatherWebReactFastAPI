@@ -72,5 +72,6 @@ def get_forecast_by_id(
             "location": forecast_info["location"],
             "current": forecast_info["current"] if settings.current else None,
             "forecast": forecast_info["forecast"],
+            "alerts": forecast_info["alerts"],
         },
     )

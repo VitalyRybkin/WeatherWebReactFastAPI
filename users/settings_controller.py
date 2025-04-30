@@ -1,4 +1,4 @@
-from typing import Type, Any, Coroutine
+from typing import Type
 
 from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
@@ -7,14 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models import Favorites, Users, Wishlist, UserSettings, Daily, Hourly, Current
 from models.tables import Tables
 from users.crud import (
-    change_location,
-    add_location,
+    alter_location,
     delete_location,
     update_settings,
     get_user,
 )
 from utils import to_json
-
 from utils.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
@@ -38,7 +36,9 @@ async def add_new_location(
     :param target: target of the operation (table name).
     :return: location info or an error on adding new location.
     """
-    user_info: Users = await get_user(session=session, user_login=user_login)
+    user_info: Users | InterfaceError | None = await get_user(
+        session=session, user_login=user_login
+    )
 
     if isinstance(user_info, Users):
         if target == Tables.WISHLIST:
@@ -55,7 +55,7 @@ async def add_new_location(
             )
 
         location_to_add.acc_id = user_info.id
-        user_info: Users = await add_location(
+        user_info: Users = await alter_location(
             session=session, new_location=location_to_add, user=user_info
         )
 
@@ -72,13 +72,17 @@ async def update_user_location(
     :param session: AsyncSession.
     :return: new location info or an error on updating new location.
     """
-    user_info: Users = await get_user(session=session, user_login=user_login)
+    user_info: Users | InterfaceError | None = await get_user(
+        session=session, user_login=user_login
+    )
 
     if isinstance(user_info, Users):
         user_info.favorites.update_location(
             **location_info.model_dump(exclude_unset=True)
         )
-        user_info: Users = await change_location(session=session, user=user_info)
+        user_info: Users = await alter_location(
+            session=session, new_location=user_info.favorites, user=user_info
+        )
 
     return user_info
 
@@ -93,7 +97,7 @@ async def delete_user_location(
     :param session: AsyncSession.
     :return: deleted location info or an error on deleting location.
     """
-    user_info: Users = await get_user(session, login)
+    user_info: Users | InterfaceError | None = await get_user(session, login)
 
     if isinstance(user_info, Users):
         user_info: Users = await delete_location(
@@ -116,16 +120,17 @@ async def update_user_settings(
         session=session, user_login=login, bot_name=bot_name
     )
 
+    # TODO change to dict update (setattr)
     if isinstance(user_info, Users):
-        settings_updated: list[
-            Current | Hourly | Daily | UserSettings
-        ] = await update_settings(
-            session=session,
-            user_info=user_info,
-            current_settings=current,
-            hourly_settings=hourly,
-            daily_settings=daily,
-            user_settings=settings,
+        settings_updated: list[Current | Hourly | Daily | UserSettings] = (
+            await update_settings(
+                session=session,
+                user_info=user_info,
+                current_settings=current,
+                hourly_settings=hourly,
+                daily_settings=daily,
+                user_settings=settings,
+            )
         )
         return settings_updated
 

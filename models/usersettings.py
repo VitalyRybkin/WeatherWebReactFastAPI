@@ -35,6 +35,7 @@ class UserSettings(AbstractBaseModel):
     current: Mapped[bool] = mapped_column(default=True)
     daily: Mapped[int] = mapped_column(default=3)
     hourly: Mapped[int] = mapped_column(default=6)
+    units: Mapped[str] = mapped_column(default="F", server_default="F")
 
     parent = relationship(
         f"{users.title()}",

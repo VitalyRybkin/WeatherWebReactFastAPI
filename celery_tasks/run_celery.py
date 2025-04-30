@@ -7,6 +7,3 @@ celery_app = Celery(
     include=["celery_tasks.tasks"],
     ignore_result=False,
 )
-
-# if __name__ == "__main__":
-#     celery_app.start()

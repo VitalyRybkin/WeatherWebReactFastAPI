@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import AbstractBaseModel

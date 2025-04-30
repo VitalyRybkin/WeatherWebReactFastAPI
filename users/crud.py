@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import EmailStr
 from sqlalchemy import insert, select, Select, Result, delete
 from sqlalchemy.exc import InterfaceError
@@ -98,32 +100,17 @@ async def change_user_password(
 
 @handling_interface_error
 @handling_integrity_error
-async def add_location(
+async def alter_location(
     session: AsyncSession, new_location: Favorites | Wishlist, user: Users
 ) -> Users:
     """
-    Function. Adds a new location to the database.
+    Function. Adds a new location to the database or changes existing.
     :param user: user information.
     :param new_location: location info
     :param session: AsyncSession.
     :return: location info or an error.
     """
     session.add(new_location)
-    await session.commit()
-    await session.refresh(user)
-
-    return user
-
-
-@handling_interface_error
-async def change_location(session: AsyncSession, user: Users) -> Users:
-    """
-    Function. Updates user's favorite location.
-    :param user: user information.
-    :param session: AsyncSession.
-    :return: updated favorite location info or an error.
-    """
-    session.add(user.favorites)
     await session.commit()
     await session.refresh(user)
 
@@ -160,8 +147,8 @@ async def update_settings(
     hourly_settings: HourlySettings,
     daily_settings: DailySettings,
     user_settings: UserSettings,
-) -> list[Current | Hourly | Daily | UserSettings]:
-    updated_settings: list[Current | Hourly | Daily | UserSettings] = []
+) -> List[Current | Hourly | Daily | UserSettings]:
+    updated_settings: List[Current | Hourly | Daily | UserSettings] = []
 
     if user_settings:
         user_info.settings.update_user_settings(

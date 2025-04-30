@@ -2,4 +2,4 @@ __all__ = [
     "location_router",
 ]
 
-from .locations import location_router
+from .locations_router import location_router

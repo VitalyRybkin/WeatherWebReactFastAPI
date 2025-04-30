@@ -81,6 +81,7 @@ async def create_user(
             detail="Database connection error. User could not be created.",
         )
 
+    # TODO move default exception to decorator
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Something went wrong.",
@@ -107,6 +108,7 @@ async def login(
         user=user_to_log_in, session=session
     )
 
+    # TODO move user_settings dict to controller
     if type(logged_user) is Users:
         user_settings: dict = {}
         user_settings.update(

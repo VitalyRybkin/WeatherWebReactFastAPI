@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 import bcrypt
 from sqlalchemy import Column, String, DateTime
@@ -8,6 +9,9 @@ from sqlalchemy_json import mutable_json_type
 
 from .base import AbstractBaseModel
 from .tables import Tables
+
+if TYPE_CHECKING:
+    from . import Wishlist
 
 
 class Users(AbstractBaseModel):
@@ -21,8 +25,8 @@ class Users(AbstractBaseModel):
         hashed user password.
     created_at: datetime
         date account was created (default value).
-    deleted: bool
-        currant or deleted (default value).
+    email_conf: bool
+        email confirmation.
     bot_id: int
         user bot id (default value).
     bot_name: str
@@ -41,28 +45,53 @@ class Users(AbstractBaseModel):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now(timezone.utc)
     )
-    # TODO change deleted to email_confirmed
-    deleted: Mapped[bool] = False
+
+    email_conf: Mapped[bool] = False
     bot_id: Mapped[int] = mapped_column(nullable=True)
     bot_name: Mapped[str] = mapped_column(String(50), nullable=True)
     dark_theme: Mapped[bool] = mapped_column(default=False)
     alert = Column(mutable_json_type(dbtype=JSONB), default={})
 
-    wishlist = relationship(
-        "Wishlist", back_populates="parent", uselist=True, lazy="joined"
+    wishlist: Mapped[list["Wishlist"]] = relationship(
+        # "Wishlist",
+        back_populates="parent",
+        # uselist=True,
+        lazy="joined",
     )
+
     favorites = relationship(
-        "Favorites", back_populates="parent", uselist=False, lazy="joined"
+        "Favorites",
+        back_populates="parent",
+        uselist=False,
+        lazy="joined",
     )
+
     settings = relationship(
-        "Settings", back_populates="parent", uselist=False, lazy="joined"
+        "UserSettings",
+        back_populates="parent",
+        uselist=False,
+        lazy="joined",
     )
+
     hourly = relationship(
-        "Hourly", back_populates="parent", uselist=False, lazy="joined"
+        "Hourly",
+        back_populates="parent",
+        uselist=False,
+        lazy="joined",
     )
-    daily = relationship("Daily", back_populates="parent", uselist=False, lazy="joined")
+
+    daily = relationship(
+        "Daily",
+        back_populates="parent",
+        uselist=False,
+        lazy="joined",
+    )
+
     current = relationship(
-        "Current", back_populates="parent", uselist=False, lazy="joined"
+        "Current",
+        back_populates="parent",
+        uselist=False,
+        lazy="joined",
     )
 
     @classmethod
@@ -93,7 +122,6 @@ class Users(AbstractBaseModel):
             f"login={self.login}, "
             f"password={self.password}, "
             f"created_at={self.created_at}, "
-            f"deleted={self.deleted}, "
             f"bot_id={self.bot_id}, "
             f"bot_name={self.bot_name}, "
             f"dark_theme={self.dark_theme}, "

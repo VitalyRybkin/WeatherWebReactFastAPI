@@ -1,4 +1,5 @@
 import functools
+from typing import Callable
 
 from sqlalchemy.exc import IntegrityError, InterfaceError
 
@@ -13,9 +14,10 @@ def to_json(table):
             for col in table.__table__.columns
             if col.name not in ["id", "acc_id"]
         }
+    return None
 
 
-def handling_integrity_error(func):
+def handling_integrity_error(func) -> Callable:
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -27,7 +29,7 @@ def handling_integrity_error(func):
     return wrapper
 
 
-def handling_interface_error(func):
+def handling_interface_error(func) -> Callable:
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         session = kwargs.get("session")
