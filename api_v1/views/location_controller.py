@@ -20,10 +20,15 @@ from schemas.weather_schemas import (
 )
 
 
-def get_locations(location_name: str) -> List[dict[str, Any]] | None:
+def get_locations(location_name: str) -> List[LocationPublic]:
+    """
+    Function. Get list of locations by name based on user request.
+    :param location_name: Name of location.
+    :return: List of locations found.
+    """
     result = location_by_name.apply_async(args=[location_name])
 
-    return [LocationPublic(**location).model_dump() for location in result.get()]
+    return [LocationPublic(**location) for location in result.get()]
 
 
 def get_location_weather(

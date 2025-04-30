@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from fastapi import APIRouter
 from starlette import status
@@ -13,6 +13,7 @@ from schemas.setting_schemas import (
     CurrentSettings,
     HourlySettings,
     DailySettings,
+    LocationPublic,
 )
 
 location_router = APIRouter(prefix="/api_v1")
@@ -21,29 +22,17 @@ location_router = APIRouter(prefix="/api_v1")
 @location_router.get(
     "/{location_name}/",
     summary="Get location / list of locations by name.",
+    response_model=List[LocationPublic],
 )
-def get_location_by_name(location_name: str) -> JSONResponse:
+def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
     """
     Function to get location by name.
     :param location_name: location name string.
     :return: List of locations found.
     """
-    locations_found: list[dict[str, Any]] | None = get_locations(location_name)
+    locations_found: List[LocationPublic] = get_locations(location_name)
 
-    if locations_found:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "detail": "Locations found",
-                "locations": locations_found,
-            },
-        )
-    else:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"success": False, "detail": "Location not found."},
-        )
+    return locations_found
 
 
 @location_router.post("/{location_id}/", summary="Get location by ID.")
