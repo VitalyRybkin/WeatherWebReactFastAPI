@@ -49,9 +49,7 @@ def get_forecast_by_id(
         current,
         daily,
         hourly,
-        settings.units,
-        settings.daily,
-        settings.hourly,
+        settings,
     )
 
     return JSONResponse(

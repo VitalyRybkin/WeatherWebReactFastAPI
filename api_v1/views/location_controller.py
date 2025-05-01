@@ -6,17 +6,17 @@ from schemas.setting_schemas import (
     LocationPublic,
     CurrentSettings,
     DailySettings,
-    HourlySettings,
+    HourlySettings, UserSettings,
 )
 from schemas.weather_schemas import (
-    CurrentWeatherMetric,
-    CurrentWeatherBritish,
+    HourlyWeatherBritish,
+    HourlyWeatherMetric,
     exclude_fields,
     DailyWeatherBritish,
     DailyWeatherMetric,
     DailyWeather,
-    HourlyWeatherMetric,
-    HourlyWeatherBritish,
+    CurrentWeatherMetric,
+    CurrentWeatherBritish,
 )
 
 
@@ -36,24 +36,20 @@ def get_location_weather(
     current_settings: CurrentSettings,
     daily_settings: DailySettings,
     hourly_settings: HourlySettings,
-    units: str,
-    amount_of_days: int,
-    amount_of_hours: int,
+    user_settings: UserSettings,
 ) -> Dict[str, Any] | None:
     """
     Function. Fetch weather data for a given location bsed on user settings.
+    :param user_settings: User settings.
     :param hourly_settings: hourly user settings
     :param daily_settings: daily user settings
-    :param amount_of_hours:  hours of forecast
-    :param amount_of_days: number of days to fetch forecast
     :param location_id: location id
     :param current_settings: current weather user settings
-    :param units: current weather units
     :return: current weather data
     """
     # TODO retry logic
 
-    weather_forecast = get_forecast.apply_async(args=[location_id, amount_of_days])
+    weather_forecast = get_forecast.apply_async(args=[location_id, user_settings.daily])
     location_weather: Dict[str, Any] = weather_forecast.get()
 
     # Current weather filtering based on user settings.
@@ -62,7 +58,7 @@ def get_location_weather(
         CurrentWeatherMetric(**location_weather["current"]).model_dump(
             exclude=exclude_fields(current=current_settings)
         )
-        if units == "C"
+        if user_settings.units == "C"
         else CurrentWeatherBritish(**location_weather["current"]).model_dump(
             exclude=exclude_fields(current=current_settings)
         )
@@ -79,12 +75,12 @@ def get_location_weather(
 
     # Daily weather filtering based on user settings.
 
-    for day in range(amount_of_days):
+    for day in range(user_settings.daily):
         daily_weather_filter: Dict[str, Any] = (
             DailyWeatherMetric(
                 **location_weather["forecast"]["forecastday"][day]["day"]
             ).model_dump(exclude=exclude_fields(daily=daily_settings))
-            if units == "C"
+            if user_settings.units == "C"
             else DailyWeatherBritish(
                 **location_weather["forecast"]["forecastday"][day]["day"]
             ).model_dump(exclude=exclude_fields(daily=daily_settings))
@@ -107,12 +103,12 @@ def get_location_weather(
 
     location_weather["forecast"]["forecasthour"] = []
 
-    for hour in forecast_hour_list[local_time.hour : local_time.hour + amount_of_hours]:
+    for hour in forecast_hour_list[local_time.hour : local_time.hour + user_settings.daily]:
         hour_weather_filter: Dict[str, Any] = (
             HourlyWeatherMetric(**hour).model_dump(
                 exclude=exclude_fields(hourly=hourly_settings)
             )
-            if units == "C"
+            if user_settings.units == "C"
             else HourlyWeatherBritish(**hour).model_dump(
                 exclude=exclude_fields(hourly=hourly_settings)
             )

@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 from schemas.setting_schemas import CurrentSettings, DailySettings, HourlySettings
 
 
-class CurrentInfo(BaseModel):
+class WeatherInfo(BaseModel):
     last_updated: str
     condition: Dict[str, str]
     humidity: int
@@ -13,8 +13,7 @@ class CurrentInfo(BaseModel):
     wind_dir: str
 
 
-class CurrentWeatherBritish(CurrentInfo):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class WeatherInfoBritish(BaseModel):
     temp_f: float
     wind_mph: float
     pressure_in: float
@@ -25,8 +24,7 @@ class CurrentWeatherBritish(CurrentInfo):
     gust_mph: float
 
 
-class CurrentWeatherMetric(CurrentInfo):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class WeatherInfoMetric(BaseModel):
     temp_c: float
     wind_kph: float
     pressure_mb: int
@@ -35,6 +33,14 @@ class CurrentWeatherMetric(CurrentInfo):
     windchill_c: float
     vis_km: float
     gust_kph: float
+
+
+class CurrentWeatherBritish(WeatherInfo, WeatherInfoBritish):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class CurrentWeatherMetric(WeatherInfo, WeatherInfoMetric):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class DailyBase(BaseModel):
@@ -94,30 +100,12 @@ class HourlyBase(BaseModel):
     chance_of_snow: int
 
 
-class HourlyWeatherMetric(HourlyBase):
+class HourlyWeatherMetric(HourlyBase, WeatherInfoMetric):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    temp_c: float
-    wind_kph: float
-    pressure_mb: int
-    precip_mm: int
-    feelslike_c: float
-    windchill_c: float
-    vis_km: int
-    gust_kph: float
 
-
-class HourlyWeatherBritish(HourlyBase):
+class HourlyWeatherBritish(HourlyBase, WeatherInfoBritish):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    temp_f: float
-    wind_mph: float
-    pressure_in: float
-    precip_in: int
-    feelslike_f: float
-    windchill_f: float
-    vis_miles: int
-    gust_mph: float
 
 
 def exclude_fields(
