@@ -1,13 +1,33 @@
-from typing import Dict, Set, Any
+from typing import Dict, Set, Any, List
 
 from pydantic import BaseModel, ConfigDict
 
-from schemas.setting_schemas import CurrentSettings, DailySettings, HourlySettings
+from schemas.setting_schemas import (
+    CurrentSettings,
+    DailySettings,
+    HourlySettings,
+)
 
 
-class WeatherInfo(BaseModel):
+class Location(BaseModel):
+    name: str
+    region: str
+    country: str
+    lat: float
+    lon: float
+    tz_id: str
+    localtime_epoch: int
+    localtime: str
+
+
+class Conditions(BaseModel):
+    text: str
+    icon: str
+
+
+class WeatherBase(BaseModel):
     last_updated: str
-    condition: Dict[str, str]
+    condition: Conditions
     humidity: int
     cloud: int
     wind_dir: str
@@ -35,12 +55,37 @@ class WeatherInfoMetric(BaseModel):
     gust_kph: float
 
 
-class CurrentWeatherBritish(WeatherInfo, WeatherInfoBritish):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class CurrentWeatherBritish(WeatherBase, WeatherInfoBritish):
+    model_config = ConfigDict()
 
 
-class CurrentWeatherMetric(WeatherInfo, WeatherInfoMetric):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class CurrentWeatherMetric(WeatherBase, WeatherInfoMetric):
+    model_config = ConfigDict()
+
+
+class CurrentWeatherPublic(BaseModel):
+    model_config = ConfigDict()
+    last_updated: str
+    condition: Conditions
+    humidity: int | None = None
+    cloud: int | None = None
+    wind_dir: str | None = None
+    temp_f: float | None = None
+    temp_c: float | None = None
+    wind_mph: float | None = None
+    wind_kph: float | None = None
+    pressure_in: float | None = None
+    pressure_mb: int | None = None
+    precip_in: float | None = None
+    precip_mm: float | None = None
+    feelslike_f: float | None = None
+    feelslike_c: float | None = None
+    windchill_f: float | None = None
+    windchill_c: float | None = None
+    vis_miles: float | None = None
+    vis_km: float | None = None
+    gust_mph: float | None = None
+    gust_kph: float | None = None
 
 
 class DailyBase(BaseModel):
@@ -49,11 +94,11 @@ class DailyBase(BaseModel):
     daily_chance_of_rain: int
     daily_will_it_snow: int
     daily_chance_of_snow: int
-    condition: Dict[str, str]
+    condition: Conditions
 
 
 class DailyWeatherBritish(DailyBase):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
     maxtemp_f: float
     mintemp_f: float
     avgtemp_f: float
@@ -63,7 +108,7 @@ class DailyWeatherBritish(DailyBase):
 
 
 class DailyWeatherMetric(DailyBase):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
     maxtemp_c: float
     mintemp_c: float
     avgtemp_c: float
@@ -73,7 +118,7 @@ class DailyWeatherMetric(DailyBase):
 
 
 class Astro(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
     sunrise: str
     sunset: str
     moonrise: str
@@ -81,16 +126,45 @@ class Astro(BaseModel):
     moon_phase: str
 
 
-class DailyWeather(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class DailyWeatherPublic(BaseModel):
+    model_config = ConfigDict()
+    maxtemp_c: float | None = None
+    maxtemp_f: float | None = None
+    mintemp_c: float | None = None
+    mintemp_f: float | None = None
+    avgtemp_c: float | None = None
+    avgtemp_f: float | None = None
+    maxwind_mph: float | None = None
+    maxwind_kph: float | None = None
+    totalprecip_mm: float | None = None
+    totalprecip_in: float | None = None
+    avgvis_km: float | None = None
+    avgvis_miles: float | None = None
+    avghumidity: int | None = None
+    daily_will_it_rain: int | None = None
+    daily_chance_of_rain: int | None = None
+    daily_will_it_snow: int | None = None
+    daily_chance_of_snow: int | None = None
+    condition: Conditions | None = None
+
+
+class DailyForecastPublic(BaseModel):
+    model_config = ConfigDict()
     date: str
-    day: Dict[str, Any]
+    day: DailyWeatherPublic
+    astro: Astro | None = None
+
+
+class DailyWeather(BaseModel):
+    model_config = ConfigDict()
+    date: str
+    day: DailyWeatherPublic
     astro: Astro
 
 
 class HourlyBase(BaseModel):
     time: str
-    condition: Dict[str, str]
+    condition: Conditions
     wind_dir: str
     humidity: int
     cloud: int
@@ -101,11 +175,58 @@ class HourlyBase(BaseModel):
 
 
 class HourlyWeatherMetric(HourlyBase, WeatherInfoMetric):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
 
 
 class HourlyWeatherBritish(HourlyBase, WeatherInfoBritish):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
+
+
+class HourlyForecastPublic(BaseModel):
+    model_config = ConfigDict()
+    time: str
+    condition: Conditions
+    wind_dir: str | None = None
+    humidity: int | None = None
+    cloud: int | None = None
+    will_it_rain: int | None = None
+    chance_of_rain: int | None = None
+    will_it_snow: int | None = None
+    chance_of_snow: int | None = None
+    temp_c: float | None = None
+    temp_f: float | None = None
+    wind_kph: float | None = None
+    wind_mph: float | None = None
+    pressure_mb: int | None = None
+    pressure_in: float | None = None
+    precip_mm: float | None = None
+    precip_in: float | None = None
+    feelslike_c: float | None = None
+    feelslike_f: float | None = None
+    windchill_c: float | None = None
+    windchill_f: float | None = None
+    vis_km: float | None = None
+    vis_miles: float | None = None
+    gust_kph: float | None = None
+    gust_mph: float | None = None
+
+
+class Forecast(BaseModel):
+    model_config = ConfigDict()
+    forecastday: List[DailyForecastPublic]
+    forecasthour: List[HourlyForecastPublic]
+
+
+class Alerts(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+
+class ForecastPublic(BaseModel):
+    model_config = ConfigDict()
+    location: Location
+    current: CurrentWeatherPublic
+    forecast: Forecast
+    alerts: Alerts
 
 
 def exclude_fields(

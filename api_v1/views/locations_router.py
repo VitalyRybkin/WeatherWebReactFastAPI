@@ -15,6 +15,7 @@ from schemas.setting_schemas import (
     DailySettings,
     LocationPublic,
 )
+from schemas.weather_schemas import ForecastPublic
 
 location_router = APIRouter(prefix="/api_v1")
 
@@ -35,14 +36,19 @@ def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
     return locations_found
 
 
-@location_router.post("/{location_id}/", summary="Get location by ID.")
+@location_router.post(
+    "/{location_id}/",
+    summary="Get location by ID.",
+    response_model=ForecastPublic,
+    response_model_exclude_none=True,
+)
 def get_forecast_by_id(
     location_id: int,
     settings: UserSettings,
     current: CurrentSettings,
     hourly: HourlySettings,
     daily: DailySettings,
-) -> JSONResponse:
+) -> dict[str, Any] | None:
 
     forecast_info = get_location_weather(
         location_id,
@@ -52,14 +58,4 @@ def get_forecast_by_id(
         settings,
     )
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={
-            "success": True,
-            "detail": "Location found",
-            "location": forecast_info["location"],
-            "current": forecast_info["current"] if settings.current else None,
-            "forecast": forecast_info["forecast"],
-            "alerts": forecast_info["alerts"],
-        },
-    )
+    return forecast_info

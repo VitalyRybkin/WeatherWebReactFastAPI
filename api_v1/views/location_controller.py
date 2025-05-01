@@ -6,7 +6,8 @@ from schemas.setting_schemas import (
     LocationPublic,
     CurrentSettings,
     DailySettings,
-    HourlySettings, UserSettings,
+    HourlySettings,
+    UserSettings,
 )
 from schemas.weather_schemas import (
     HourlyWeatherBritish,
@@ -17,16 +18,23 @@ from schemas.weather_schemas import (
     DailyWeather,
     CurrentWeatherMetric,
     CurrentWeatherBritish,
+    Location,
+    CurrentWeatherPublic,
+    DailyWeatherPublic,
+    Astro,
+    DailyForecastPublic,
+    HourlyForecastPublic,
+    Conditions,
 )
 
 
 def get_locations(location_name: str) -> List[LocationPublic]:
     """
-    Function. Get list of locations by name based on user request.
+    Function. Get a list of locations by name based on user request.
     :param location_name: Name of location.
     :return: List of locations found.
     """
-    result = location_by_name.apply_async(args=[location_name])
+    result: Any = location_by_name.apply_async(args=[location_name])
 
     return [LocationPublic(**location) for location in result.get()]
 
@@ -52,8 +60,14 @@ def get_location_weather(
     weather_forecast = get_forecast.apply_async(args=[location_id, user_settings.daily])
     location_weather: Dict[str, Any] = weather_forecast.get()
 
+    location_weather_response: dict[str, Location | CurrentWeatherPublic | Dict] = {}
+    location_weather_response.update(location=Location(**location_weather["location"]))
+
     # Current weather filtering based on user settings.
 
+    location_weather["current"]["condition"] = Conditions(
+        **location_weather["current"]["condition"]
+    )
     current_weather_filter: Dict[str, Any] = (
         CurrentWeatherMetric(**location_weather["current"]).model_dump(
             exclude=exclude_fields(current=current_settings)
@@ -64,18 +78,25 @@ def get_location_weather(
         )
     )
 
-    location_weather["current"] = current_weather_filter
-
-    forecast_day: list[DailyWeather] = []
-    forecast_hour_list: list = []
-
-    local_time: datetime = datetime.strptime(
-        location_weather["location"]["localtime"], "%Y-%m-%d %H:%M"
+    location_weather_response.update(
+        current=CurrentWeatherPublic.model_validate(current_weather_filter)
     )
 
     # Daily weather filtering based on user settings.
 
+    sample_forecast_day = []
+    forecast_hour_list: list = []
+    local_time: datetime = datetime.strptime(
+        location_weather["location"]["localtime"], "%Y-%m-%d %H:%M"
+    )
+
     for day in range(user_settings.daily):
+        location_weather["forecast"]["forecastday"][day]["day"]["condition"] = (
+            Conditions(
+                **location_weather["forecast"]["forecastday"][day]["day"]["condition"]
+            )
+        )
+
         daily_weather_filter: Dict[str, Any] = (
             DailyWeatherMetric(
                 **location_weather["forecast"]["forecastday"][day]["day"]
@@ -85,25 +106,36 @@ def get_location_weather(
                 **location_weather["forecast"]["forecastday"][day]["day"]
             ).model_dump(exclude=exclude_fields(daily=daily_settings))
         )
+
         day_weather: DailyWeather = DailyWeather(
             date=location_weather["forecast"]["forecastday"][day]["date"],
-            day=daily_weather_filter,
-            astro=location_weather["forecast"]["forecastday"][day]["astro"],
+            day=DailyWeatherPublic.model_validate(daily_weather_filter),
+            astro=Astro.model_validate(
+                location_weather["forecast"]["forecastday"][day]["astro"]
+            ),
         )
-        forecast_day.append(
-            day_weather.model_dump(exclude=exclude_fields(daily=daily_settings))
+
+        sample_forecast_day.append(
+            DailyForecastPublic.model_validate(
+                day_weather.model_dump(exclude=exclude_fields(daily=daily_settings))
+            )
         )
+
         forecast_hour_list.extend(
             location_weather["forecast"]["forecastday"][day]["hour"]
         )
 
-    location_weather["forecast"]["forecastday"] = forecast_day
+    location_weather_response.update(forecast={})
+    location_weather_response["forecast"].update(forecastday=sample_forecast_day)
 
     # Hourly weather filtering based on user settings.
 
-    location_weather["forecast"]["forecasthour"] = []
+    location_weather_response["forecast"].update(forecasthour=[])
 
-    for hour in forecast_hour_list[local_time.hour : local_time.hour + user_settings.daily]:
+    for hour in forecast_hour_list[
+        local_time.hour : local_time.hour + user_settings.daily
+    ]:
+        hour["condition"] = Conditions(**hour["condition"])
         hour_weather_filter: Dict[str, Any] = (
             HourlyWeatherMetric(**hour).model_dump(
                 exclude=exclude_fields(hourly=hourly_settings)
@@ -114,6 +146,11 @@ def get_location_weather(
             )
         )
 
-        location_weather["forecast"]["forecasthour"].append(hour_weather_filter)
+        location_weather_response["forecast"]["forecasthour"].append(
+            HourlyForecastPublic.model_validate(hour_weather_filter)
+        )
 
-    return location_weather
+    # TODO handle alert model if needed
+    location_weather_response.update(alerts=location_weather["alerts"])
+
+    return location_weather_response

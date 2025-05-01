@@ -27,7 +27,7 @@ def location_by_name(location_name) -> Any | None:
 
 
 @celery_app.task(name="run_tasks.get_forecast", serializer="json")
-def get_forecast(location_id: int, amount_of_days: int) -> Any | None:
+def get_forecast(location_id: int, amount_of_days: int) -> Response | None:
     """
     Function. Get locations by id from API.
     :param amount_of_days: days of forecast
