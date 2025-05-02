@@ -1,8 +1,6 @@
 from typing import Any, List
 
 from fastapi import APIRouter
-from starlette import status
-from starlette.responses import JSONResponse
 
 from api_v1.views.location_controller import (
     get_locations,
@@ -28,7 +26,7 @@ location_router = APIRouter(prefix="/api_v1")
 def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
     """
     Function to get location by name.
-    :param location_name: location name string.
+    :param location_name: Location name string.
     :return: List of locations found.
     """
     locations_found: List[LocationPublic] = get_locations(location_name)

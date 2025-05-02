@@ -49,7 +49,7 @@ def get_location_weather(
     """
     Function. Fetch weather data for a given location bsed on user settings.
     :param user_settings: User settings.
-    :param hourly_settings: hourly user settings
+    :param hourly_settings: Hourly user settings
     :param daily_settings: daily user settings
     :param location_id: location id
     :param current_settings: current weather user settings

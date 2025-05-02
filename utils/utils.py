@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError, InterfaceError
 
 def to_json(table):
     """
-    Function. Convert table to json
+    Function. Convert table to JSON
     """
     if table:
         return {

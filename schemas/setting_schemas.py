@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal
+from typing import Annotated
 
 from annotated_types import MaxLen
 from pydantic import BaseModel, ConfigDict

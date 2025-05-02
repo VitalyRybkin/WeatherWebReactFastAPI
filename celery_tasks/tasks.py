@@ -1,18 +1,17 @@
-from json import JSONDecoder
 from typing import Any
 
 import requests
 from requests import Response
 
-from .run_celery import celery_app
 from utils.settings import settings
+from .run_celery import celery_app
 
 
 @celery_app.task(name="run_tasks.location_by_name", serializer="json")
 def location_by_name(location_name) -> Any | None:
     """
     Function. Get locations by name from API.
-    :param location_name: location name string
+    :param location_name: Location name string
     :return: List of locations
     """
     try:
