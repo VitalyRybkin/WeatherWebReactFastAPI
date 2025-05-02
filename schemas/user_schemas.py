@@ -88,4 +88,8 @@ class UserChangePassword(UserBase, UserPassword):
     new_password: Annotated[str, MinLen(5), MaxLen(15)] | None = None
 
 
-
+class LocationPublic(BaseModel):
+    loc_id: int
+    loc_name: str
+    loc_region: str
+    loc_country: str

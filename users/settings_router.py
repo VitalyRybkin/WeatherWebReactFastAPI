@@ -1,3 +1,5 @@
+from typing import List, Union
+
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from pydantic import EmailStr
@@ -7,13 +9,6 @@ from starlette.responses import JSONResponse
 
 from models import Users, Current, Hourly, Daily, UserSettings
 from models.tables import Tables
-from users.settings_controller import (
-    update_user_location,
-    add_new_location,
-    delete_user_location,
-    update_user_settings,
-)
-from utils import db_engine, to_json
 from schemas.setting_schemas import (
     FavoriteLocation,
     UserSettings,
@@ -21,6 +16,14 @@ from schemas.setting_schemas import (
     HourlySettings,
     DailySettings,
 )
+from schemas.user_schemas import LocationPublic
+from users.settings_controller import (
+    update_user_location,
+    add_new_location,
+    delete_user_location,
+    update_user_settings,
+)
+from utils import db_engine, to_json
 
 settings_router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -28,16 +31,17 @@ settings_router = APIRouter(prefix="/settings", tags=["settings"])
 @settings_router.post(
     "/add_location/",
     summary="Add user's favorite location or new location to wishlist",
+    response_model=Union[List[LocationPublic], LocationPublic],
 )
 async def add_new_user_location(
     login: EmailStr,
     target: str,
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> JSONResponse:
+) -> list[LocationPublic] | LocationPublic | None:
     """
     Function. Adds user's favorite location or new location to wishlist.'
-    :param login: user's login'
+    :param login: User's login
     :param target: operation target - 'favorite' or 'wishlist'
     :param location: location info
     :param session: AsyncSession
@@ -63,39 +67,25 @@ async def add_new_user_location(
         )
 
     if user_info is IntegrityError or type(user_info) is IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Location could not be added. Location already exists.",
-        )
+        if target == "wishlist":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Location could not be added. Location already exists.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Location could not be added. User already has favorite location set.",
+            )
 
     if target == "wishlist" and user_info.wishlist:
-        wishlist: list = []
-        for loc in user_info.wishlist:
-            wishlist.append(to_json(loc))
+        return [LocationPublic(**to_json(loc)) for loc in user_info.wishlist]
 
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "detail": "User location added to wishlist.",
-                "wishlist": wishlist,
-            },
-        )
     if target == "favorite":
-        location_info = to_json(user_info.favorites)
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "detail": "User location set as favorite.",
-                "location_info": location_info,
-            },
-        )
+        location_info = LocationPublic(**to_json(user_info.favorites))
+        return location_info
 
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
-    )
+    return None
 
 
 @settings_router.patch("/change_location/", summary="Change user favorite location")
