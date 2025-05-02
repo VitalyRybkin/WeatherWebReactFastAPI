@@ -34,25 +34,25 @@ class WeatherBase(BaseModel):
 
 
 class WeatherInfoBritish(BaseModel):
-    temp_f: float
-    wind_mph: float
-    pressure_in: float
-    precip_in: float
-    feelslike_f: float
-    windchill_f: float
-    vis_miles: float
-    gust_mph: float
+    temp_f: float | None = None
+    wind_mph: float | None = None
+    pressure_in: float | None = None
+    precip_in: float | None = None
+    feelslike_f: float | None = None
+    windchill_f: float | None = None
+    vis_miles: float | None = None
+    gust_mph: float | None = None
 
 
 class WeatherInfoMetric(BaseModel):
-    temp_c: float
-    wind_kph: float
-    pressure_mb: int
-    precip_mm: float
-    feelslike_c: float
-    windchill_c: float
-    vis_km: float
-    gust_kph: float
+    temp_c: float | None = None
+    wind_kph: float | None = None
+    pressure_mb: int | None = None
+    precip_mm: float | None = None
+    feelslike_c: float | None = None
+    windchill_c: float | None = None
+    vis_km: float | None = None
+    gust_kph: float | None = None
 
 
 class CurrentWeatherBritish(WeatherBase, WeatherInfoBritish):
@@ -63,33 +63,12 @@ class CurrentWeatherMetric(WeatherBase, WeatherInfoMetric):
     model_config = ConfigDict()
 
 
-class CurrentWeatherPublic(BaseModel):
+class CurrentWeatherPublic(CurrentWeatherMetric, WeatherInfoBritish):
     model_config = ConfigDict()
-    last_updated: str
-    condition: Conditions
-    humidity: int | None = None
-    cloud: int | None = None
-    wind_dir: str | None = None
-    temp_f: float | None = None
-    temp_c: float | None = None
-    wind_mph: float | None = None
-    wind_kph: float | None = None
-    pressure_in: float | None = None
-    pressure_mb: int | None = None
-    precip_in: float | None = None
-    precip_mm: float | None = None
-    feelslike_f: float | None = None
-    feelslike_c: float | None = None
-    windchill_f: float | None = None
-    windchill_c: float | None = None
-    vis_miles: float | None = None
-    vis_km: float | None = None
-    gust_mph: float | None = None
-    gust_kph: float | None = None
 
 
 class DailyBase(BaseModel):
-    avghumidity: int
+    avghumidity: int | None = None
     daily_will_it_rain: int
     daily_chance_of_rain: int
     daily_will_it_snow: int
@@ -99,22 +78,22 @@ class DailyBase(BaseModel):
 
 class DailyWeatherBritish(DailyBase):
     model_config = ConfigDict()
-    maxtemp_f: float
-    mintemp_f: float
-    avgtemp_f: float
-    maxwind_mph: float
-    totalprecip_in: float
-    avgvis_miles: float
+    maxtemp_f: float | None = None
+    mintemp_f: float | None = None
+    avgtemp_f: float | None = None
+    maxwind_mph: float | None = None
+    totalprecip_in: float | None = None
+    avgvis_miles: float | None = None
 
 
 class DailyWeatherMetric(DailyBase):
     model_config = ConfigDict()
-    maxtemp_c: float
-    mintemp_c: float
-    avgtemp_c: float
-    maxwind_kph: float
-    totalprecip_mm: float
-    avgvis_km: float
+    maxtemp_c: float | None = None
+    mintemp_c: float | None = None
+    avgtemp_c: float | None = None
+    maxwind_kph: float | None = None
+    totalprecip_mm: float | None = None
+    avgvis_km: float | None = None
 
 
 class Astro(BaseModel):
@@ -126,26 +105,8 @@ class Astro(BaseModel):
     moon_phase: str
 
 
-class DailyWeatherPublic(BaseModel):
+class DailyWeatherPublic(DailyWeatherBritish, DailyWeatherMetric):
     model_config = ConfigDict()
-    maxtemp_c: float | None = None
-    maxtemp_f: float | None = None
-    mintemp_c: float | None = None
-    mintemp_f: float | None = None
-    avgtemp_c: float | None = None
-    avgtemp_f: float | None = None
-    maxwind_mph: float | None = None
-    maxwind_kph: float | None = None
-    totalprecip_mm: float | None = None
-    totalprecip_in: float | None = None
-    avgvis_km: float | None = None
-    avgvis_miles: float | None = None
-    avghumidity: int | None = None
-    daily_will_it_rain: int | None = None
-    daily_chance_of_rain: int | None = None
-    daily_will_it_snow: int | None = None
-    daily_chance_of_snow: int | None = None
-    condition: Conditions | None = None
 
 
 class DailyForecastPublic(BaseModel):
@@ -166,7 +127,7 @@ class HourlyBase(BaseModel):
     time: str
     condition: Conditions
     wind_dir: str
-    humidity: int
+    humidity: int | None = None
     cloud: int
     will_it_rain: int
     chance_of_rain: int
@@ -182,33 +143,8 @@ class HourlyWeatherBritish(HourlyBase, WeatherInfoBritish):
     model_config = ConfigDict()
 
 
-class HourlyForecastPublic(BaseModel):
+class HourlyForecastPublic(HourlyBase, WeatherInfoMetric, WeatherInfoBritish):
     model_config = ConfigDict()
-    time: str
-    condition: Conditions
-    wind_dir: str | None = None
-    humidity: int | None = None
-    cloud: int | None = None
-    will_it_rain: int | None = None
-    chance_of_rain: int | None = None
-    will_it_snow: int | None = None
-    chance_of_snow: int | None = None
-    temp_c: float | None = None
-    temp_f: float | None = None
-    wind_kph: float | None = None
-    wind_mph: float | None = None
-    pressure_mb: int | None = None
-    pressure_in: float | None = None
-    precip_mm: float | None = None
-    precip_in: float | None = None
-    feelslike_c: float | None = None
-    feelslike_f: float | None = None
-    windchill_c: float | None = None
-    windchill_f: float | None = None
-    vis_km: float | None = None
-    vis_miles: float | None = None
-    gust_kph: float | None = None
-    gust_mph: float | None = None
 
 
 class Forecast(BaseModel):
