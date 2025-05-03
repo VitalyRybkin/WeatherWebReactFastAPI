@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Any, Coroutine
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
@@ -16,7 +16,7 @@ from schemas.setting_schemas import (
     HourlySettings,
     DailySettings,
 )
-from schemas.user_schemas import LocationPublic
+from schemas.user_schemas import LocationPublic, Message
 from users.settings_controller import (
     update_user_location,
     add_new_location,
@@ -32,13 +32,31 @@ settings_router = APIRouter(prefix="/settings", tags=["settings"])
     "/add_location/",
     summary="Add user's favorite location or new location to wishlist",
     response_model=Union[List[LocationPublic], LocationPublic],
+    responses={
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": Message,
+            "description": "Database connection error",
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "model": Message,
+            "description": "Wrong target request",
+        },
+        status.HTTP_409_CONFLICT: {
+            "model": Message,
+            "description": "Location already exists",
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "model": Message,
+            "description": "Something went wrong",
+        },
+    },
 )
 async def add_new_user_location(
     login: EmailStr,
     target: str,
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> list[LocationPublic] | LocationPublic | None:
+) -> JSONResponse | list[LocationPublic] | LocationPublic:
     """
     Function. Adds user's favorite location or new location to wishlist.'
     :param login: User's login
@@ -48,9 +66,9 @@ async def add_new_user_location(
     :return: added location info or an HTTP error
     """
     if target not in ["favorite", "wishlist"]:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Target parameter must be 'favorite' or 'wishlist'",
+            content={"message": "Target parameter must be 'favorite' or 'wishlist'"},
         )
 
     user_info: Users | InterfaceError | IntegrityError = await add_new_location(
@@ -61,21 +79,27 @@ async def add_new_user_location(
     )
 
     if user_info is InterfaceError:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User location could not be added or changed.",
+            content={
+                "message": "Database connection error. User location could not be added or changed."
+            },
         )
 
     if user_info is IntegrityError or type(user_info) is IntegrityError:
         if target == "wishlist":
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Location could not be added. Location already exists.",
+                content={
+                    "message": "Error on adding location!. Location already exists."
+                },
             )
         else:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Location could not be added. User already has favorite location set.",
+                content={
+                    "message": "Location could not be added. User already has favorite location set."
+                },
             )
 
     if target == "wishlist" and user_info.wishlist:
@@ -85,39 +109,53 @@ async def add_new_user_location(
         location_info = LocationPublic(**to_json(user_info.favorites))
         return location_info
 
-    return None
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"message": "Something went wrong."},
+    )
 
 
-@settings_router.patch("/change_location/", summary="Change user favorite location")
+@settings_router.patch(
+    "/change_location/",
+    summary="Change user favorite location",
+    response_model=LocationPublic,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": Message,
+            "description": "Something went wrong.",
+        },
+        status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
+    },
+)
 async def change_user_location(
     login: EmailStr,
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> JSONResponse:
+) -> LocationPublic | JSONResponse:
     user_info: Users = await update_user_location(
         user_login=login, location_info=location, session=session
     )
 
     if isinstance(user_info, Users):
-        user_info = to_json(user_info.favorites)
+        return LocationPublic(**to_json(user_info.favorites))
+
+    if user_info is None:
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "detail": "User favorite location changed.",
-                "location_info": user_info,
-            },
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User not found."},
         )
 
     if user_info is InterfaceError:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User favorite location could not be changed.",
+            content={
+                "message": "Database connection error. User favorite location could not be changed."
+            },
         )
 
-    raise HTTPException(
+    return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
+        content={"message": "Something went wrong."},
     )
 
 
