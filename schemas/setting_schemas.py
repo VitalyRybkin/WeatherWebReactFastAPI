@@ -41,7 +41,6 @@ class CurrentSettings(WeatherSettings):
 class DailySettings(WeatherSettings):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    wind_extended: bool
     astro: bool
 
 
@@ -64,3 +63,10 @@ class LocationPublic(BaseModel):
     name: Annotated[str, MaxLen(100)]
     region: Annotated[str, MaxLen(100)]
     country: Annotated[str, MaxLen(100)]
+
+
+class SettingsPublic(BaseModel):
+    settings: UserSettings
+    current: CurrentSettings
+    daily: DailySettings
+    hourly: HourlySettings

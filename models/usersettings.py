@@ -45,11 +45,16 @@ class UserSettings(AbstractBaseModel):
     )
 
     def update_user_settings(
-        self, current: bool = None, daily: int = None, hourly: int = None
+        self,
+        current: bool = None,
+        daily: int = None,
+        hourly: int = None,
+        units: str = None,
     ):
         self.current = current
         self.daily = daily
         self.hourly = hourly
+        self.units = units
 
     def __repr__(self):
         return (
@@ -57,7 +62,8 @@ class UserSettings(AbstractBaseModel):
             f"acc_id={self.acc_id},"
             f"current={self.current},"
             f"daily={self.daily},"
-            f"hourly={self.hourly}"
+            f"hourly={self.hourly},"
+            f"units={self.units}>"
             f"parent={self.parent.__repr__()}"
             f")>"
         )

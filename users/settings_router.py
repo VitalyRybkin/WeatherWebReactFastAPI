@@ -1,6 +1,6 @@
-from typing import List, Union, Any, Coroutine
+from typing import List, Union
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from fastapi.params import Depends
 from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
@@ -15,6 +15,7 @@ from schemas.setting_schemas import (
     CurrentSettings,
     HourlySettings,
     DailySettings,
+    SettingsPublic,
 )
 from schemas.user_schemas import LocationPublic, Message
 from users.settings_controller import (
@@ -47,7 +48,6 @@ settings_router = APIRouter(prefix="/settings", tags=["settings"])
         },
         status.HTTP_400_BAD_REQUEST: {
             "model": Message,
-            "description": "Something went wrong",
         },
     },
 )
@@ -122,7 +122,6 @@ async def add_new_user_location(
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "model": Message,
-            "description": "Something went wrong.",
         },
         status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
     },
@@ -132,6 +131,13 @@ async def change_user_location(
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> LocationPublic | JSONResponse:
+    """
+    Function. Changes favorite user's location.
+    :param login: user's login
+    :param location: location to change
+    :param session: a Database session
+    :return: set location
+    """
     user_info: Users = await update_user_location(
         user_login=login, location_info=location, session=session
     )
@@ -166,7 +172,6 @@ async def change_user_location(
     responses={
         status.HTTP_400_BAD_REQUEST: {
             "model": Message,
-            "description": "Something went wrong.",
         },
         status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
@@ -180,6 +185,13 @@ async def remove_user_location(
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> list[LocationPublic] | JSONResponse:
+    """
+    Function to remove user location from wishlist.
+    :param login: User login
+    :param location: location to remove
+    :param session: DB session
+    :return: user wishlist locations
+    """
     user_locations: Users | InterfaceError = await delete_user_location(
         login=login, location_info=location, session=session
     )
@@ -209,7 +221,21 @@ async def remove_user_location(
     )
 
 
-@settings_router.patch("/update_settings/", summary="Update user weather settings")
+@settings_router.patch(
+    "/update_settings/",
+    summary="Update user weather settings",
+    response_model=SettingsPublic,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": Message,
+        },
+        status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": Message,
+            "description": "Database connection error.",
+        },
+    },
+)
 async def update_user_weather_settings(
     login: EmailStr | None = None,
     bot_name: str | None = None,
@@ -218,7 +244,18 @@ async def update_user_weather_settings(
     daily: DailySettings | None = None,
     settings: UserSettings | None = None,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> JSONResponse:
+) -> JSONResponse | SettingsPublic:
+    """
+    Function to update user weather settings
+    :param login: user login
+    :param bot_name: user bot name
+    :param current: user current weather settings
+    :param hourly: user hourly weather settings
+    :param daily: user daily weather settings
+    :param settings: user settings
+    :param session: Database session
+    :return: user weather settings
+    """
     settings_updated: list[Current | Hourly | Daily | UserSettings] | InterfaceError = (
         await update_user_settings(
             login, bot_name, current, hourly, daily, settings, session
@@ -226,9 +263,17 @@ async def update_user_weather_settings(
     )
 
     if settings_updated is InterfaceError:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User settings could not be updated.",
+            content={
+                "message": "Database connection error. User settings cannot be updated."
+            },
+        )
+
+    if settings_updated is None:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User not found."},
         )
 
     if settings_updated:
@@ -236,16 +281,11 @@ async def update_user_weather_settings(
         for setting in settings_updated:
             user_settings.update({setting.__tablename__: to_json(setting)})
 
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "detail": "User settings updated.",
-                "user_settings": user_settings,
-            },
-        )
+        user_settings_response: SettingsPublic = SettingsPublic(**user_settings)
 
-    raise HTTPException(
+        return user_settings_response
+
+    return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
+        content={"message": "Something went wrong."},
     )
