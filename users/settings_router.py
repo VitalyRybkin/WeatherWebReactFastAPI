@@ -160,39 +160,52 @@ async def change_user_location(
 
 
 @settings_router.delete(
-    "/remove_location/", summary="Remove user location from wishlist"
+    "/remove_location/",
+    summary="Remove user location from wishlist",
+    response_model=List[LocationPublic],
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": Message,
+            "description": "Something went wrong.",
+        },
+        status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": Message,
+            "description": "Database connection error.",
+        },
+    },
 )
 async def remove_user_location(
     login: EmailStr,
     location: FavoriteLocation,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> JSONResponse:
+) -> list[LocationPublic] | JSONResponse:
     user_locations: Users | InterfaceError = await delete_user_location(
         login=login, location_info=location, session=session
     )
 
     if isinstance(user_locations, Users):
-        wishlist: list = []
-        for loc in user_locations.wishlist:
-            wishlist.append(to_json(loc))
+        return [
+            LocationPublic(**to_json(location)) for location in user_locations.wishlist
+        ]
 
+    if user_locations is None:
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"message": "User not found."},
+        )
+
+    if user_locations is InterfaceError:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
-                "success": True,
-                "detail": "User location removed from wishlist.",
-                "wishlist": wishlist,
+                "message": "Database connection error. User location cannot be removed."
             },
         )
-    if user_locations is InterfaceError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User favorite location could not be removed.",
-        )
 
-    raise HTTPException(
+    return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
+        content={"message": "Something went wrong."},
     )
 
 
