@@ -53,9 +53,7 @@ class Users(AbstractBaseModel):
     alert = Column(mutable_json_type(dbtype=JSONB), default={})
 
     wishlist: Mapped[list["Wishlist"]] = relationship(
-        # "Wishlist",
         back_populates="parent",
-        # uselist=True,
         lazy="joined",
     )
 
@@ -67,7 +65,7 @@ class Users(AbstractBaseModel):
     )
 
     settings = relationship(
-        "UserSettings",
+        f"{Tables.SETTINGS.title()}",
         back_populates="parent",
         uselist=False,
         lazy="joined",
@@ -98,8 +96,8 @@ class Users(AbstractBaseModel):
     def hash_password(cls, password: str) -> str:
         """
         Function to hash user's password.
-        :param password: string password to hash.
-        :return: string password hash.
+        :param password: String password to hash.
+        :return: String password hash.
         """
         salt = bcrypt.gensalt()
         password = password.encode("utf-8")
@@ -109,8 +107,8 @@ class Users(AbstractBaseModel):
     def verify_password(self, password: bytes):
         """
         Function to verify user's password.
-        :param password: bytes password to verify.
-        :return: whether password matches.
+        :param password: Bytes password to verify.
+        :return: Whether the password matches.
         """
         pwhash: bool = bcrypt.checkpw(password, self.password.encode("utf-8"))
         return pwhash

@@ -1,3 +1,5 @@
+from typing import Any, Coroutine
+
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from pydantic import EmailStr
@@ -6,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from models import Users
+from schemas.error_response_schemas import BadRequestMessage, Message
+from schemas.setting_schemas import SettingsPublic
 from users import user_controller
 from users.user_controller import (
     user_logging,
@@ -19,15 +23,26 @@ from schemas.user_schemas import (
     UserLogin,
     UserAccountsLink,
     UserChangePassword,
+    UserPublic,
+    UserCreatedPublic,
 )
 
 user_router = APIRouter(prefix="/users")
 
 
-@user_router.post("/registration/", summary="Register a new user")
+@user_router.post(
+    "/registration/",
+    summary="Register a new user",
+    response_model=UserCreatedPublic,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
+        status.HTTP_409_CONFLICT: {"model": Message},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": Message},
+    },
+)
 async def create_user(
     new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
-) -> JSONResponse:
+) -> JSONResponse | UserCreatedPublic:
     """
     Function. Creates a new user.
     :param new_user: login (an email address), password, bot_id, bot_name
@@ -39,53 +54,31 @@ async def create_user(
         await user_controller.create_user(session=session, new_user=new_user)
     )
 
-    if type(new_user) is Users:
-        user_settings: dict = {}
-        user_settings.update(
-            {new_user.settings.__tablename__: to_json(new_user.settings)}
-        )
-        user_settings.update(
-            {new_user.current.__tablename__: to_json(new_user.current)}
-        )
-        user_settings.update({new_user.daily.__tablename__: to_json(new_user.daily)})
-        user_settings.update({new_user.hourly.__tablename__: to_json(new_user.hourly)})
-
-        # TODO add email notification
-
-        return JSONResponse(
-            status_code=status.HTTP_201_CREATED,
-            content={
-                "success": True,
-                "detail": "User created.",
-                "user": {
-                    "id": new_user.id,
-                    "login": new_user.login,
-                    "bot_id": new_user.bot_id,
-                    "bot_name": new_user.bot_name,
-                    "alert": new_user.alert,
-                    # "email_confirmed": new_user.email_confirmed
-                },
-                "user_settings": user_settings,
-            },
-        )
-
     if type(new_user) is IntegrityError:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User could not be created. User already exists.",
+            content={"message": "User could not be created. User already exists."},
         )
 
     if type(new_user) is InterfaceError:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User could not be created.",
+            content={
+                "message": "Database connection error. User could not be created."
+            },
         )
 
-    # TODO move default exception to decorator
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
-    )
+    user_settings: dict = {}
+    user_settings.update({new_user.settings.__tablename__: to_json(new_user.settings)})
+    user_settings.update({new_user.current.__tablename__: to_json(new_user.current)})
+    user_settings.update({new_user.daily.__tablename__: to_json(new_user.daily)})
+    user_settings.update({new_user.hourly.__tablename__: to_json(new_user.hourly)})
+
+    user_settings_response: SettingsPublic = SettingsPublic(**user_settings)
+    user_info: UserPublic = UserPublic(**to_json(new_user))
+    # TODO add email notification
+
+    return UserCreatedPublic(user_info=user_info, user_settings=user_settings_response)
 
 
 @user_router.get("/login/", summary="User login with e-mail and password")

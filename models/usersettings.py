@@ -5,7 +5,7 @@ from models import AbstractBaseModel
 from models.tables import Tables
 
 
-class UserSettings(AbstractBaseModel):
+class Settings(AbstractBaseModel):
     """
     SQLAlchemy user settings model
     Attributes
@@ -15,7 +15,7 @@ class UserSettings(AbstractBaseModel):
     current: bool
         display current weather (default=True)
     daily: int
-        nuber of days displayed (default=3)
+        number of days displayed (default=3)
     hourly: int
         number of hours displayed default=6)
     """

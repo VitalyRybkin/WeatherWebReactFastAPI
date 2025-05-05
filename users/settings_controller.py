@@ -4,7 +4,7 @@ from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Favorites, Users, Wishlist, UserSettings, Daily, Hourly, Current
+from models import Favorites, Users, Wishlist, Settings, Daily, Hourly, Current
 from models.tables import Tables
 from users.crud import (
     alter_location,
@@ -122,7 +122,7 @@ async def update_user_settings(
 
     # TODO change to dict update (setattr)
     if isinstance(user_info, Users):
-        settings_updated: list[Current | Hourly | Daily | UserSettings] = (
+        settings_updated: list[Current | Hourly | Daily | Settings] = (
             await update_settings(
                 session=session,
                 user_info=user_info,

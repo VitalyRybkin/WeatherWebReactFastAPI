@@ -2,7 +2,7 @@ __all__ = (
     "AbstractBaseModel",
     "Users",
     "Wishlist",
-    "UserSettings",
+    "Settings",
     "Current",
     "Favorites",
     "Daily",
@@ -11,7 +11,7 @@ __all__ = (
 from .base import AbstractBaseModel
 from .users import Users
 from .wishlist import Wishlist
-from .usersettings import UserSettings
+from .usersettings import Settings
 from .current import Current
 from .favorites import Favorites
 from .daily import Daily

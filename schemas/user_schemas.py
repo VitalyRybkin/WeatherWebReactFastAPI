@@ -1,7 +1,9 @@
 from typing import Annotated
 
 from annotated_types import MinLen, MaxLen
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
+
+from schemas.setting_schemas import SettingsPublic
 
 
 class UserBase(BaseModel):
@@ -53,7 +55,7 @@ class UserPublic(UserBase, UserTelegram):
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    id: int
+    id: int | None = None
 
 
 class UserCreate(UserBase, UserPassword, UserTelegram):
@@ -89,7 +91,21 @@ class UserChangePassword(UserBase, UserPassword):
 
 
 class LocationPublic(BaseModel):
+    """
+    Pydentic model for user location response
+    """
+
     loc_id: int
     loc_name: str
     loc_region: str
     loc_country: str
+
+
+class UserCreatedPublic(BaseModel):
+    """
+    Pydentic model for user creation response
+    """
+
+    model_config = ConfigDict()
+    user_info: UserPublic
+    user_settings: SettingsPublic

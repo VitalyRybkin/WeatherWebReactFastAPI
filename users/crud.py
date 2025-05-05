@@ -5,7 +5,7 @@ from sqlalchemy import insert, select, Select, Result, delete
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Users, Current, Daily, Hourly, UserSettings, Favorites, Wishlist
+from models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
 from schemas.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
@@ -22,18 +22,19 @@ async def create_new_user(session, user) -> Users:
     """
     Function. Adds a new user to the database.
     :param session: SQLAlchemy session.
-    :param user: user to create.
-    :return: user if successful or an error.
+    :param user: User to create.
+    :return: User if successful or an error.
     """
 
-    user = Users(**user.model_dump())
+    user: Users = Users(**user.model_dump())
     session.add(user)
     await session.commit()
+    await session.refresh(user)
 
     await session.execute(insert(Current).values(acc_id=user.id))
     await session.execute(insert(Daily).values(acc_id=user.id))
     await session.execute(insert(Hourly).values(acc_id=user.id))
-    await session.execute(insert(UserSettings).values(acc_id=user.id))
+    await session.execute(insert(Settings).values(acc_id=user.id))
     await session.commit()
     await session.refresh(user)
 
@@ -47,7 +48,7 @@ async def get_user(
     """
     Function. Fetches a user from the database by login or bot name.
     :param session: SQLAlchemy session.
-    :param user_login: user login
+    :param user_login: User login
     :param bot_name: bot name
     :return: user info if successful or an error.
     """
@@ -67,11 +68,11 @@ async def link_user_accounts(
     session: AsyncSession, web_user: Users, bot_user: Users
 ) -> Users | InterfaceError:
     """
-    Function. Updates user accounts - adding bot account to web account. Deletes user's bot-only account.
-    :param bot_user: bot user info to delete
+    Function. Updates user accounts - adding bot account to a web account. Deletes user's bot-only account.
+    :param bot_user: Bot user info to delete
     :param web_user: web user info to update.
     :param session: SQLAlchemy session.
-    :return: user info if successful or an error.
+    :return: User info if successful or an error.
     """
     session.add(web_user)
     await session.execute(delete(Users).where(Users.id == bot_user.id))
@@ -105,10 +106,10 @@ async def alter_location(
 ) -> Users:
     """
     Function. Adds a new location to the database or changes existing.
-    :param user: user information.
-    :param new_location: location info
+    :param user: User information.
+    :param new_location: Location info
     :param session: AsyncSession.
-    :return: location info or an error.
+    :return: Location info or an error.
     """
     session.add(new_location)
     await session.commit()
@@ -125,8 +126,8 @@ async def delete_location(
     Function. Deletes user's favorite location from wishlist
     :param user_info: user info.
     :param session: AsyncSession.
-    :param location_info: location to delete.
-    :return: location info or an error.
+    :param location_info: Location to delete.
+    :return: Location info or an error.
     """
     await session.execute(
         delete(Wishlist)
@@ -148,7 +149,7 @@ async def update_settings(
     daily_settings: DailySettings,
     user_settings: UserSettings,
 ) -> List[Current | Hourly | Daily | UserSettings]:
-    updated_settings: List[Current | Hourly | Daily | UserSettings] = []
+    updated_settings: List[Current | Hourly | Daily | Settings] = []
 
     if user_settings:
         user_info.settings.update_user_settings(

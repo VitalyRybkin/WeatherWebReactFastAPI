@@ -12,7 +12,7 @@ def to_json(table):
         return {
             col.name: getattr(table, col.name)
             for col in table.__table__.columns
-            if col.name not in ["id", "acc_id"]
+            # if col.name not in ["id", "acc_id"]
         }
     return None
 
@@ -37,8 +37,8 @@ def handling_interface_error(func) -> Callable:
             return await func(*args, **kwargs)
         except InterfaceError as e:
             print(e)
-            session.rollback()
-            session.flush()
+            await session.rollback()
+            await session.flush()
             try:
                 return await func(*args, **kwargs)
             except Exception as exc:

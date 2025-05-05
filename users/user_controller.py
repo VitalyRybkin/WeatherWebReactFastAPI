@@ -25,7 +25,7 @@ async def create_user(
     Function. Handling creation of a new user or an error on existing one.
     :param session: AsyncSession
     :param new_user: new user information
-    :return: whether new user was created or an error on existing one
+    :return:  Whether a new user was created or an error on existing one
     """
 
     if new_user.password:

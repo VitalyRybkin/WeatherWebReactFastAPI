@@ -7,7 +7,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from models import Users, Current, Hourly, Daily, UserSettings
+from models import Users, Current, Hourly, Daily, Settings
 from models.tables import Tables
 from schemas.error_response_schemas import Message, BadRequestMessage
 from schemas.setting_schemas import (
@@ -237,7 +237,7 @@ async def update_user_weather_settings(
     :param session: Database session
     :return: user weather settings
     """
-    settings_updated: list[Current | Hourly | Daily | UserSettings] | InterfaceError = (
+    settings_updated: list[Current | Hourly | Daily | Settings] | InterfaceError = (
         await update_user_settings(
             login, bot_name, current, hourly, daily, settings, session
         )
