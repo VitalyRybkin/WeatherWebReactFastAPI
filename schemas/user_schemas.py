@@ -93,7 +93,3 @@ class LocationPublic(BaseModel):
     loc_name: str
     loc_region: str
     loc_country: str
-
-
-class Message(BaseModel):
-    message: str
