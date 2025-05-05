@@ -9,6 +9,7 @@ from starlette.responses import JSONResponse
 
 from models import Users, Current, Hourly, Daily, UserSettings
 from models.tables import Tables
+from schemas.error_response_schemas import Message, BadRequestMessage
 from schemas.setting_schemas import (
     FavoriteLocation,
     UserSettings,
@@ -17,7 +18,7 @@ from schemas.setting_schemas import (
     DailySettings,
     SettingsPublic,
 )
-from schemas.user_schemas import LocationPublic, Message
+from schemas.user_schemas import LocationPublic
 from users.settings_controller import (
     update_user_location,
     add_new_location,
@@ -47,7 +48,7 @@ settings_router = APIRouter(prefix="/settings", tags=["settings"])
             "description": "Location already exists",
         },
         status.HTTP_400_BAD_REQUEST: {
-            "model": Message,
+            "model": BadRequestMessage,
         },
     },
 )
@@ -105,14 +106,8 @@ async def add_new_user_location(
     if target == "wishlist" and user_info.wishlist:
         return [LocationPublic(**to_json(loc)) for loc in user_info.wishlist]
 
-    if target == "favorite":
-        location_info = LocationPublic(**to_json(user_info.favorites))
-        return location_info
-
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={"message": "Something went wrong."},
-    )
+    location_info = LocationPublic(**to_json(user_info.favorites))
+    return location_info
 
 
 @settings_router.patch(
@@ -121,7 +116,7 @@ async def add_new_user_location(
     response_model=LocationPublic,
     responses={
         status.HTTP_400_BAD_REQUEST: {
-            "model": Message,
+            "model": BadRequestMessage,
         },
         status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
     },
@@ -142,9 +137,6 @@ async def change_user_location(
         user_login=login, location_info=location, session=session
     )
 
-    if isinstance(user_info, Users):
-        return LocationPublic(**to_json(user_info.favorites))
-
     if user_info is None:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -159,10 +151,7 @@ async def change_user_location(
             },
         )
 
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={"message": "Something went wrong."},
-    )
+    return LocationPublic(**to_json(user_info.favorites))
 
 
 @settings_router.delete(
@@ -171,7 +160,7 @@ async def change_user_location(
     response_model=List[LocationPublic],
     responses={
         status.HTTP_400_BAD_REQUEST: {
-            "model": Message,
+            "model": BadRequestMessage,
         },
         status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
@@ -196,11 +185,6 @@ async def remove_user_location(
         login=login, location_info=location, session=session
     )
 
-    if isinstance(user_locations, Users):
-        return [
-            LocationPublic(**to_json(location)) for location in user_locations.wishlist
-        ]
-
     if user_locations is None:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -215,10 +199,7 @@ async def remove_user_location(
             },
         )
 
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={"message": "Something went wrong."},
-    )
+    return [LocationPublic(**to_json(location)) for location in user_locations.wishlist]
 
 
 @settings_router.patch(
@@ -227,7 +208,7 @@ async def remove_user_location(
     response_model=SettingsPublic,
     responses={
         status.HTTP_400_BAD_REQUEST: {
-            "model": Message,
+            "model": BadRequestMessage,
         },
         status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
@@ -276,16 +257,10 @@ async def update_user_weather_settings(
             content={"message": "User not found."},
         )
 
-    if settings_updated:
-        user_settings: dict = {}
-        for setting in settings_updated:
-            user_settings.update({setting.__tablename__: to_json(setting)})
+    user_settings: dict = {}
+    for setting in settings_updated:
+        user_settings.update({setting.__tablename__: to_json(setting)})
 
-        user_settings_response: SettingsPublic = SettingsPublic(**user_settings)
+    user_settings_response: SettingsPublic = SettingsPublic(**user_settings)
 
-        return user_settings_response
-
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={"message": "Something went wrong."},
-    )
+    return user_settings_response
