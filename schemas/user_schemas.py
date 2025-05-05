@@ -1,9 +1,9 @@
-from typing import Annotated
+from typing import Annotated, List, Dict
 
 from annotated_types import MinLen, MaxLen
 from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
-from schemas.setting_schemas import SettingsPublic
+from schemas.setting_schemas import SettingsPublic, FavoriteLocation
 
 
 class UserBase(BaseModel):
@@ -54,7 +54,7 @@ class UserPublic(UserBase, UserTelegram):
         user account ID
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
     id: int | None = None
 
 
@@ -71,7 +71,7 @@ class UserLogin(UserBase, UserPassword):
     Pydentic model for user login
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
 
 
 class UserAccountsLink(UserBase, UserTelegram):
@@ -101,7 +101,7 @@ class LocationPublic(BaseModel):
     loc_country: str
 
 
-class UserCreatedPublic(BaseModel):
+class UserFullInfoPublic(BaseModel):
     """
     Pydentic model for user creation response
     """
@@ -109,3 +109,14 @@ class UserCreatedPublic(BaseModel):
     model_config = ConfigDict()
     user_info: UserPublic
     user_settings: SettingsPublic
+
+
+class LoggedUserPublic(BaseModel):
+    """
+    Pydentic model for user login response
+    """
+
+    user_info: UserPublic
+    user_settings: SettingsPublic
+    favorite: FavoriteLocation | Dict
+    wishlist: List[FavoriteLocation] | List

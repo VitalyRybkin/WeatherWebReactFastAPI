@@ -1,4 +1,4 @@
-from typing import Any, Coroutine
+from typing import Any, List, Dict
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
@@ -9,7 +9,16 @@ from starlette.responses import JSONResponse
 
 from models import Users
 from schemas.error_response_schemas import BadRequestMessage, Message
-from schemas.setting_schemas import SettingsPublic
+from schemas.setting_schemas import SettingsPublic, FavoriteLocation
+from schemas.user_schemas import (
+    UserCreate,
+    UserLogin,
+    UserAccountsLink,
+    UserChangePassword,
+    UserPublic,
+    UserFullInfoPublic,
+    LoggedUserPublic,
+)
 from users import user_controller
 from users.user_controller import (
     user_logging,
@@ -18,14 +27,6 @@ from users.user_controller import (
 )
 from utils import to_json
 from utils.db_engine import db_engine
-from schemas.user_schemas import (
-    UserCreate,
-    UserLogin,
-    UserAccountsLink,
-    UserChangePassword,
-    UserPublic,
-    UserCreatedPublic,
-)
 
 user_router = APIRouter(prefix="/users")
 
@@ -33,7 +34,7 @@ user_router = APIRouter(prefix="/users")
 @user_router.post(
     "/registration/",
     summary="Register a new user",
-    response_model=UserCreatedPublic,
+    response_model=UserFullInfoPublic,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
         status.HTTP_409_CONFLICT: {"model": Message},
@@ -42,7 +43,7 @@ user_router = APIRouter(prefix="/users")
 )
 async def create_user(
     new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
-) -> JSONResponse | UserCreatedPublic:
+) -> JSONResponse | UserFullInfoPublic:
     """
     Function. Creates a new user.
     :param new_user: login (an email address), password, bot_id, bot_name
@@ -68,28 +69,32 @@ async def create_user(
             },
         )
 
-    user_settings: dict = {}
-    user_settings.update({new_user.settings.__tablename__: to_json(new_user.settings)})
-    user_settings.update({new_user.current.__tablename__: to_json(new_user.current)})
-    user_settings.update({new_user.daily.__tablename__: to_json(new_user.daily)})
-    user_settings.update({new_user.hourly.__tablename__: to_json(new_user.hourly)})
-
+    user_settings = await get_settings_dict(new_user)
     user_settings_response: SettingsPublic = SettingsPublic(**user_settings)
     user_info: UserPublic = UserPublic(**to_json(new_user))
     # TODO add email notification
 
-    return UserCreatedPublic(user_info=user_info, user_settings=user_settings_response)
+    return UserFullInfoPublic(user_info=user_info, user_settings=user_settings_response)
 
 
-@user_router.get("/login/", summary="User login with e-mail and password")
+@user_router.get(
+    "/login/",
+    summary="User login with e-mail and password",
+    response_model=LoggedUserPublic,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
+        status.HTTP_401_UNAUTHORIZED: {"model": Message},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": Message},
+    },
+)
 async def login(
     user_login: EmailStr,
     user_password: str,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> JSONResponse:
+) -> JSONResponse | LoggedUserPublic:
     """
     Function. Logs a user in.
-    :param user_login: user login (an email address)
+    :param user_login: User login (an email address)
     :param user_password: user password
     :param session: AsyncSession
     :return: whether the user was successfully logged in or not (HTTP error)
@@ -101,62 +106,60 @@ async def login(
         user=user_to_log_in, session=session
     )
 
-    # TODO move user_settings dict to controller
-    if type(logged_user) is Users:
-        user_settings: dict = {}
-        user_settings.update(
-            {logged_user.settings.__tablename__: to_json(logged_user.settings)}
-        )
-        user_settings.update(
-            {logged_user.current.__tablename__: to_json(logged_user.current)}
-        )
-        user_settings.update(
-            {logged_user.daily.__tablename__: to_json(logged_user.daily)}
-        )
-        user_settings.update(
-            {logged_user.hourly.__tablename__: to_json(logged_user.hourly)}
-        )
-
-        if logged_user.favorites:
-            user_settings.update(
-                {logged_user.favorites.__tablename__: to_json(logged_user.favorites)}
-            )
-
-        if logged_user.wishlist:
-            wishlist: list = [to_json(item) for item in logged_user.wishlist]
-            user_settings.update({"wishlist": wishlist})
-
+    if type(logged_user) is InterfaceError:
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=status.HTTP_400_BAD_REQUEST,
             content={
-                "success": True,
-                "detail": "User logged in",
-                "user": {
-                    "id": logged_user.id,
-                    "login": logged_user.login,
-                    "dark_theme": logged_user.dark_theme,
-                    "alert": logged_user.alert,
-                },
-                "user_settings": user_settings,
+                "message": "Database connection error. User could not be logged in."
             },
         )
 
-    if type(logged_user) is InterfaceError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User could not be logged in.",
-        )
-
     if not logged_user:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password.",
+            content={"message": "Incorrect username or password."},
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
+    # TODO move user_settings dict to controller
+    user_settings: SettingsPublic = SettingsPublic(
+        **await get_settings_dict(logged_user)
     )
+
+    user_favorite_location: FavoriteLocation | Dict = (
+        FavoriteLocation(**to_json(logged_user.favorites))
+        if logged_user.favorites
+        else {}
+    )
+
+    user_wishlist: List[FavoriteLocation] | List = (
+        [FavoriteLocation(**to_json(location)) for location in logged_user.wishlist]
+        if logged_user.wishlist
+        else []
+    )
+
+    user_info: UserPublic = UserPublic(**to_json(logged_user))
+
+    return LoggedUserPublic(
+        user_info=user_info,
+        user_settings=user_settings,
+        favorite=user_favorite_location,
+        wishlist=user_wishlist,
+    )
+
+
+async def get_settings_dict(logged_user) -> dict[str, Any]:
+    user_settings: dict = {}
+    user_settings.update(
+        {logged_user.settings.__tablename__: to_json(logged_user.settings)}
+    )
+    user_settings.update(
+        {logged_user.current.__tablename__: to_json(logged_user.current)}
+    )
+    user_settings.update({logged_user.daily.__tablename__: to_json(logged_user.daily)})
+    user_settings.update(
+        {logged_user.hourly.__tablename__: to_json(logged_user.hourly)}
+    )
+    return user_settings
 
 
 @user_router.patch("/link/", summary="Link web and telegram accounts")

@@ -38,7 +38,9 @@ async def create_user(
     return user_created
 
 
-async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
+async def user_logging(
+    user: UserLogin, session: AsyncSession
+) -> Users | InterfaceError | None:
     """
     Function. Handling user logging in.
     :param user: user information (login, password)
@@ -49,6 +51,7 @@ async def user_logging(user: UserLogin, session: AsyncSession) -> Users | None:
     user_found: Users | InterfaceError | None = await get_user(
         session=session, user_login=user.login
     )
+
     if (
         type(user_found) is Users
         and user_found.verify_password(user.password.encode())

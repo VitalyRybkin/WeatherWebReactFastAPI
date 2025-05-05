@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 
 from annotated_types import MaxLen
 from pydantic import BaseModel, ConfigDict
@@ -18,7 +18,7 @@ class FavoriteLocation(BaseModel):
     Pydentic model for user location information
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
     loc_id: int
     loc_name: Annotated[str, MaxLen(100)]
     loc_region: Annotated[str, MaxLen(100)]
@@ -26,26 +26,26 @@ class FavoriteLocation(BaseModel):
 
 
 class HourlySettings(WeatherSettings):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
     wind_extended: bool
     pressure: bool
 
 
 class CurrentSettings(WeatherSettings):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
 
     wind_extended: bool
     pressure: bool
 
 
 class DailySettings(WeatherSettings):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
 
     astro: bool
 
 
 class UserSettings(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
 
     current: bool = True
     daily: int = 3
@@ -58,7 +58,7 @@ class LocationPublic(BaseModel):
     Pydentic model for user location information
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict()
     id: int
     name: Annotated[str, MaxLen(100)]
     region: Annotated[str, MaxLen(100)]
