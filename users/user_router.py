@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from models import Users
-from schemas.error_response_schemas import BadRequestMessage, Message
+from schemas.error_response_schemas import BadRequestMessage, ErrorMessage
 from schemas.setting_schemas import SettingsPublic, FavoriteLocation
 from schemas.user_schemas import (
     UserCreate,
@@ -37,8 +37,8 @@ user_router = APIRouter(prefix="/users")
     response_model=UserFullInfoPublic,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
-        status.HTTP_409_CONFLICT: {"model": Message},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": Message},
+        status.HTTP_409_CONFLICT: {"model": ErrorMessage},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
     },
 )
 async def create_user(
@@ -83,8 +83,8 @@ async def create_user(
     response_model=LoggedUserPublic,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
-        status.HTTP_401_UNAUTHORIZED: {"model": Message},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": Message},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessage},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
     },
 )
 async def login(
@@ -162,7 +162,16 @@ async def get_settings_dict(logged_user) -> dict[str, Any]:
     return user_settings
 
 
-@user_router.patch("/link/", summary="Link web and telegram accounts")
+@user_router.patch(
+    "/link/",
+    summary="Link web and telegram accounts",
+    responses={
+        status.HTTP_200_OK: {"model": ErrorMessage},
+        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorMessage},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
+    },
+)
 async def link_account(
     user_link_info: UserAccountsLink,
     session: AsyncSession = Depends(db_engine.session_dependency),
@@ -181,32 +190,34 @@ async def link_account(
     )
 
     if account_linked is InterfaceError:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. Accounts could not be linked.",
-        )
-
-    if account_linked:
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"success": True, "detail": "Accounts linked."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "message": "Database connection error. Accounts could not be linked."
+            },
         )
 
     if account_linked is None:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Account could not be linked. Bot user not found.",
+            content={"message": "Account could not be linked. Bot user not found."},
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"success": True, "detail": "Accounts linked."},
     )
 
 
 @user_router.put(
     "/change_password/",
     summary="Change user password",
+    responses={
+        status.HTTP_200_OK: {"model": ErrorMessage},
+        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessage},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
+    },
     description="Changes user password with login, password, new password",
 )
 async def update_user_password(
@@ -223,28 +234,23 @@ async def update_user_password(
         user=user, session=session
     )
 
-    if type(user_password_changed) is Users:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "detail": "User password has changed.",
-            },
-        )
-
     if user_password_changed is None:
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Incorrect password."},
+            content={"message": "Incorrect password."},
         )
 
     if type(user_password_changed) is InterfaceError:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Database connection error. User password could not be changed.",
+            content={
+                "message": "Database connection error. Accounts could not be linked."
+            },
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Something went wrong.",
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "User password has changed.",
+        },
     )

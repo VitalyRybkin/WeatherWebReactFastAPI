@@ -9,7 +9,7 @@ from starlette.responses import JSONResponse
 
 from models import Users, Current, Hourly, Daily, Settings
 from models.tables import Tables
-from schemas.error_response_schemas import Message, BadRequestMessage
+from schemas.error_response_schemas import ErrorMessage, BadRequestMessage
 from schemas.setting_schemas import (
     FavoriteLocation,
     UserSettings,
@@ -36,15 +36,15 @@ settings_router = APIRouter(prefix="/settings", tags=["settings"])
     response_model=Union[List[LocationPublic], LocationPublic],
     responses={
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": Message,
+            "model": ErrorMessage,
             "description": "Database connection error",
         },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "model": Message,
+            "model": ErrorMessage,
             "description": "Wrong target request",
         },
         status.HTTP_409_CONFLICT: {
-            "model": Message,
+            "model": ErrorMessage,
             "description": "Location already exists",
         },
         status.HTTP_400_BAD_REQUEST: {
@@ -118,7 +118,10 @@ async def add_new_user_location(
         status.HTTP_400_BAD_REQUEST: {
             "model": BadRequestMessage,
         },
-        status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorMessage,
+            "description": "User not found.",
+        },
     },
 )
 async def change_user_location(
@@ -162,9 +165,12 @@ async def change_user_location(
         status.HTTP_400_BAD_REQUEST: {
             "model": BadRequestMessage,
         },
-        status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorMessage,
+            "description": "User not found.",
+        },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": Message,
+            "model": ErrorMessage,
             "description": "Database connection error.",
         },
     },
@@ -210,9 +216,12 @@ async def remove_user_location(
         status.HTTP_400_BAD_REQUEST: {
             "model": BadRequestMessage,
         },
-        status.HTTP_404_NOT_FOUND: {"model": Message, "description": "User not found."},
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorMessage,
+            "description": "User not found.",
+        },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": Message,
+            "model": ErrorMessage,
             "description": "Database connection error.",
         },
     },
