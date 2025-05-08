@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 import bcrypt
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr
 from sqlalchemy_json import mutable_json_type
 
 from .base import AbstractBaseModel
@@ -58,7 +58,7 @@ class Users(AbstractBaseModel):
     )
 
     favorites = relationship(
-        "Favorites",
+        f"{Tables.FAVORITES.title()}",
         back_populates="parent",
         uselist=False,
         lazy="joined",
@@ -72,21 +72,21 @@ class Users(AbstractBaseModel):
     )
 
     hourly = relationship(
-        "Hourly",
+        f"{Tables.HOURLY.title()}",
         back_populates="parent",
         uselist=False,
         lazy="joined",
     )
 
     daily = relationship(
-        "Daily",
+        f"{Tables.DAILY.title()}",
         back_populates="parent",
         uselist=False,
         lazy="joined",
     )
 
     current = relationship(
-        "Current",
+        f"{Tables.CURRENT.title()}",
         back_populates="parent",
         uselist=False,
         lazy="joined",
@@ -125,4 +125,18 @@ class Users(AbstractBaseModel):
             f"dark_theme={self.dark_theme}, "
             f"alert={self.alert}"
             f")>"
+        )
+
+
+class UserRelationMixin:
+    _user_back_populates: str | None = None
+    _user_single_parent: bool = True
+
+    @declared_attr
+    def parent(cls) -> Mapped[Users]:
+        return relationship(
+            f"{Tables.USERS.title()}",
+            single_parent=cls._user_single_parent,
+            back_populates=cls._user_back_populates,
+            cascade="all, delete",
         )

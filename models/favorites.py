@@ -1,11 +1,12 @@
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import AbstractBaseModel
 from .tables import Tables
+from .users import UserRelationMixin
 
 
-class Favorites(AbstractBaseModel):
+class Favorites(UserRelationMixin, AbstractBaseModel):
     """
     SQLAlchemy model for user favorite location
     Attributes
@@ -21,7 +22,7 @@ class Favorites(AbstractBaseModel):
     """
 
     __tablename__ = Tables.FAVORITES
-
+    _user_back_populates = "favorites"
     users = Tables.USERS
 
     acc_id: Mapped[int] = mapped_column(
@@ -36,13 +37,6 @@ class Favorites(AbstractBaseModel):
     loc_name: Mapped[str] = mapped_column(String(100), nullable=False)
     loc_region: Mapped[str] = mapped_column(String(100), nullable=False)
     loc_country: Mapped[str] = mapped_column(String(100), nullable=False)
-
-    parent = relationship(
-        f"{users.title()}",
-        back_populates="favorites",
-        single_parent=True,
-        cascade="all, delete",
-    )
 
     def update_location(
         self, loc_id: int, loc_name: str, loc_region: str, loc_country: str

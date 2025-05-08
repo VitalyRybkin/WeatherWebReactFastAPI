@@ -1,11 +1,12 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, relationship, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from models import AbstractBaseModel
 from models.tables import Tables
+from models.users import UserRelationMixin
 
 
-class Daily(AbstractBaseModel):
+class Daily(UserRelationMixin, AbstractBaseModel):
     """
     SQLAlchemy model for Daily weather display settings
     Attributes
@@ -21,6 +22,7 @@ class Daily(AbstractBaseModel):
     """
 
     __tablename__ = Tables.DAILY
+    _user_back_populates = "daily"
 
     users = Tables.USERS
 
@@ -45,13 +47,6 @@ class Daily(AbstractBaseModel):
         self.astro = astro
         self.visibility = visibility
         self.humidity = humidity
-
-    parent: Mapped[users] = relationship(
-        f"{users.title()}",
-        back_populates="daily",
-        single_parent=True,
-        cascade="all, delete",
-    )
 
     def __repr__(self):
         return (

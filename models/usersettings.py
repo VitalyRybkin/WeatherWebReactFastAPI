@@ -1,11 +1,12 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from models import AbstractBaseModel
 from models.tables import Tables
+from models.users import UserRelationMixin
 
 
-class Settings(AbstractBaseModel):
+class Settings(UserRelationMixin, AbstractBaseModel):
     """
     SQLAlchemy user settings model
     Attributes
@@ -21,7 +22,7 @@ class Settings(AbstractBaseModel):
     """
 
     __tablename__ = Tables.SETTINGS
-
+    _user_back_populates = "settings"
     users = Tables.USERS
 
     acc_id: Mapped[int] = mapped_column(
@@ -36,13 +37,6 @@ class Settings(AbstractBaseModel):
     daily: Mapped[int] = mapped_column(default=3)
     hourly: Mapped[int] = mapped_column(default=6)
     units: Mapped[str] = mapped_column(default="F", server_default="F")
-
-    parent = relationship(
-        f"{users.title()}",
-        back_populates="settings",
-        single_parent=True,
-        cascade="all, delete",
-    )
 
     def update_user_settings(
         self,

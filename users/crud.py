@@ -57,10 +57,8 @@ async def get_user(
     else:
         get_user_info: Select = select(Users).filter(Users.bot_name == bot_name)
 
-    result: Result = await session.execute(get_user_info)
-    user_info: Users = result.scalar()
-
-    return user_info if user_info else None
+    user_info: Users | None = await session.scalar(get_user_info)
+    return user_info
 
 
 @handling_interface_error

@@ -1,11 +1,12 @@
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import AbstractBaseModel
 from .tables import Tables
+from .users import UserRelationMixin
 
 
-class Wishlist(AbstractBaseModel):
+class Wishlist(UserRelationMixin, AbstractBaseModel):
     """
     SQLAlchemy model for storing user'sWishlist.
     Attributes
@@ -22,7 +23,8 @@ class Wishlist(AbstractBaseModel):
     """
 
     __tablename__ = Tables.WISHLIST
-
+    _user_back_populates = "wishlist"
+    _user_single_parent = False
     users = Tables.USERS
 
     acc_id: Mapped[int] = mapped_column(
@@ -36,12 +38,6 @@ class Wishlist(AbstractBaseModel):
     loc_name: Mapped[str] = mapped_column(String(100), nullable=False)
     loc_region: Mapped[str] = mapped_column(String(100), nullable=False)
     loc_country: Mapped[str] = mapped_column(String(100), nullable=False)
-
-    parent = relationship(
-        f"{users.title()}",
-        back_populates="wishlist",
-        cascade="all, delete",
-    )
 
     def __repr__(self):
         return (

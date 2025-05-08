@@ -1,11 +1,12 @@
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, relationship, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from models import AbstractBaseModel
 from models.tables import Tables
+from models.users import UserRelationMixin
 
 
-class Current(AbstractBaseModel):
+class Current(UserRelationMixin, AbstractBaseModel):
     """
     SQLAlchemy model for current weather display settings
     Attributes
@@ -23,7 +24,7 @@ class Current(AbstractBaseModel):
     """
 
     __tablename__ = Tables.CURRENT
-
+    _user_back_populates = "current"
     users = Tables.USERS
 
     acc_id: Mapped[int] = mapped_column(
@@ -38,13 +39,6 @@ class Current(AbstractBaseModel):
     pressure: Mapped[bool] = mapped_column(default=False)
     visibility: Mapped[bool] = mapped_column(default=False)
     humidity: Mapped[bool] = mapped_column(default=False)
-
-    parent = relationship(
-        f"{users.title()}",
-        back_populates="current",
-        single_parent=True,
-        cascade="all, delete",
-    )
 
     def update_current(
         self,
