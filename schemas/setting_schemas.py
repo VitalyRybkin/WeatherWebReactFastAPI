@@ -1,7 +1,7 @@
-from typing import Annotated
+from typing import Annotated, Any, Dict
 
 from annotated_types import MaxLen
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Json
 
 
 class Settings(BaseModel):
@@ -45,12 +45,15 @@ class DailySettings(WeatherSettings):
 
 
 class UserSettings(BaseModel):
-    model_config = ConfigDict()
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     current: bool = True
     daily: int = 3
     hourly: int = 8
     units: str = "F"
+    dark_theme: bool
+    alerts: bool
+    notifications: Dict[int, str]
 
 
 class LocationPublic(BaseModel):
