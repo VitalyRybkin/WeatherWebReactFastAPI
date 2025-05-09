@@ -1,5 +1,7 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Column
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy_json import mutable_json_type
+from sqlalchemy.dialects.postgresql import JSONB
 
 from models import AbstractBaseModel
 from models.tables import Tables
@@ -37,6 +39,11 @@ class Settings(UserRelationMixin, AbstractBaseModel):
     daily: Mapped[int] = mapped_column(default=3)
     hourly: Mapped[int] = mapped_column(default=6)
     units: Mapped[str] = mapped_column(default="F", server_default="F")
+    dark_theme: Mapped[bool] = mapped_column(default=False, server_default="False")
+    notifications = Column(
+        mutable_json_type(dbtype=JSONB), default={}, server_default="{}"
+    )
+    alerts: Mapped[bool] = mapped_column(default=False, server_default="False")
 
     def update_user_settings(
         self,

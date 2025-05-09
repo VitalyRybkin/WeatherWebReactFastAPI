@@ -49,8 +49,8 @@ class Users(AbstractBaseModel):
     email_conf: Mapped[bool] = False
     bot_id: Mapped[int] = mapped_column(nullable=True)
     bot_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    dark_theme: Mapped[bool] = mapped_column(default=False)
-    alert = Column(mutable_json_type(dbtype=JSONB), default={})
+    # dark_theme: Mapped[bool] = mapped_column(default=False)
+    # alert = Column(mutable_json_type(dbtype=JSONB), default={})
 
     wishlist: Mapped[list["Wishlist"]] = relationship(
         back_populates="parent",
