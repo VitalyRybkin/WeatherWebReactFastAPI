@@ -1,4 +1,4 @@
-version: '3'
+#version: '3'
 services:
   fastapi-app:
     build:
@@ -27,3 +27,24 @@ services:
       - redis
     links:
       - redis:redis
+
+  prometheus:
+    build:
+      context: prometheus
+    image: prometheus
+    ports:
+      - '9090:9090'
+    stop_signal: SIGKILL
+    depends_on:
+      - fastapi-app
+
+  grafana:
+    image: grafana/grafana:5.1.0
+    volumes:
+      - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/default.yaml
+      - ./grafana/dashboard.yaml:/var/lib/grafana/dashboards/default.yaml
+    ports:
+      - '3000:3000'
+    stop_signal: SIGKILL
+    depends_on:
+      - prometheus
