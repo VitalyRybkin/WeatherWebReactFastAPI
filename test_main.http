@@ -9,3 +9,13 @@ GET http://127.0.0.1:8000/hello/User
 Accept: application/json
 
 ###
+
+GET http://127.0.0.1:8000/api_v1/Saint-Petersburg/
+Accept: application/json
+
+###
+
+POST http://localhost:8000/api_v1/2558083/
+Accept: application/json
+
+###

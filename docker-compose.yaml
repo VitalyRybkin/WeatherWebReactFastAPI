@@ -1,0 +1,29 @@
+version: '3'
+services:
+  fastapi-app:
+    build:
+     context: .
+    image: fastapi_app
+    ports:
+      - '8080:8000'
+    stop_signal: SIGKILL
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  redis:
+    image: redis:latest
+    restart: always
+    expose:
+      - '6379'
+    ports:
+      - '6379:6379'
+
+  celery_worker:
+    build:
+      context: .
+    image: fastapi_celery
+    restart: always
+    command: celery -A celery_tasks.run_celery worker -E --loglevel INFO
+    depends_on:
+      - redis
+    links:
+      - redis:redis

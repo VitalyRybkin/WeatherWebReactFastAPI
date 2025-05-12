@@ -1,7 +1,7 @@
 from typing import Annotated, List, Dict
 
 from annotated_types import MinLen, MaxLen
-from pydantic import BaseModel, EmailStr, ConfigDict, Field
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from schemas.setting_schemas import SettingsPublic, FavoriteLocation
 
@@ -111,12 +111,12 @@ class UserFullInfoPublic(BaseModel):
     user_settings: SettingsPublic
 
 
-class LoggedUserPublic(BaseModel):
+class LoggedUserPublic(UserFullInfoPublic):
     """
     Pydentic model for user login response
     """
 
-    user_info: UserPublic
-    user_settings: SettingsPublic
+    # user_info: UserPublic
+    # user_settings: SettingsPublic
     favorite: FavoriteLocation | Dict
     wishlist: List[FavoriteLocation] | List
