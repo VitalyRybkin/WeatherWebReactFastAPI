@@ -17,6 +17,15 @@ services:
     ports:
       - '6379:6379'
 
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    ports:
+      - '3100:3100'
+    command: -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./grafana/loki_config.yaml:/etc/loki/loki.yaml
+
   celery_worker:
     build:
       context: .
@@ -35,16 +44,27 @@ services:
     ports:
       - '9090:9090'
     stop_signal: SIGKILL
+    volumes:
+      - prometheusdata:/prometheus
     depends_on:
       - fastapi-app
 
   grafana:
-    image: grafana/grafana:5.1.0
+    image: grafana/grafana:latest
     volumes:
       - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/default.yaml
       - ./grafana/dashboard.yaml:/var/lib/grafana/dashboards/default.yaml
+      - grafanadata:/var/lib/grafana
     ports:
       - '3000:3000'
     stop_signal: SIGKILL
     depends_on:
       - prometheus
+
+  alloy:
+    volumes:
+      - './grafana/config.alloy:/etc/alloy/config.alloy'
+    ports:
+      - '12345:12345'
+    image: 'grafana/alloy:latest'
+    command: 'run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy'
