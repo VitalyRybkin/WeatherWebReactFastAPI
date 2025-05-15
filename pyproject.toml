@@ -25,6 +25,7 @@ pydantic = {extras = ["email"], version = "^2.11.3"}
 ipython = "^9.1.0"
 fastapi = "^0.115.12"
 prometheus-client = "^0.21.1"
+prometheus-fastapi-instrumentator = "^7.1.0"
 
 [build-system]
 requires = ["poetry-core"]

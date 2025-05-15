@@ -8,6 +8,8 @@ services:
       - '8080:8000'
     stop_signal: SIGKILL
     command: uvicorn main:app --host 0.0.0.0 --port 8000
+    networks:
+      - monitor-net
 
   redis:
     image: redis:latest
@@ -25,6 +27,8 @@ services:
     command: -config.file=/etc/loki/loki.yaml
     volumes:
       - ./grafana/loki_config.yaml:/etc/loki/loki.yaml
+    networks:
+      - monitor-net
 
   celery_worker:
     build:
@@ -45,21 +49,25 @@ services:
       - '9090:9090'
     stop_signal: SIGKILL
     volumes:
-      - prometheusdata:/prometheus
+      - prometheus_data:/prometheus
     depends_on:
       - fastapi-app
+    networks:
+      - monitor-net
 
   grafana:
     image: grafana/grafana:latest
     volumes:
       - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/default.yaml
       - ./grafana/dashboard.yaml:/var/lib/grafana/dashboards/default.yaml
-      - grafanadata:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
     ports:
       - '3000:3000'
     stop_signal: SIGKILL
     depends_on:
       - prometheus
+    networks:
+      - monitor-net
 
   alloy:
     volumes:
@@ -68,3 +76,13 @@ services:
       - '12345:12345'
     image: 'grafana/alloy:latest'
     command: 'run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy'
+    networks:
+      - monitor-net
+
+networks:
+  monitor-net:
+    driver: bridge
+
+volumes:
+    prometheus_data: {}
+    grafana_data: {}
