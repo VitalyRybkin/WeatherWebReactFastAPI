@@ -3,7 +3,7 @@ from typing import Annotated, List, Dict
 from annotated_types import MinLen, MaxLen
 from pydantic import BaseModel, EmailStr, ConfigDict
 
-from schemas.setting_schemas import SettingsPublic, FavoriteLocation
+from app.schemas.setting_schemas import SettingsPublic, FavoriteLocation
 
 
 class UserBase(BaseModel):

@@ -7,10 +7,10 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from models import Users, Current, Hourly, Daily, Settings
-from models.tables import Tables
-from schemas.error_response_schemas import ErrorMessage, BadRequestMessage
-from schemas.setting_schemas import (
+from app.models import Users, Current, Hourly, Daily, Settings
+from app.models.tables import Tables
+from app.schemas.error_response_schemas import ErrorMessage, BadRequestMessage
+from app.schemas.setting_schemas import (
     FavoriteLocation,
     UserSettings,
     CurrentSettings,
@@ -18,14 +18,14 @@ from schemas.setting_schemas import (
     DailySettings,
     SettingsPublic,
 )
-from schemas.user_schemas import LocationPublic
-from users.settings_controller import (
+from app.schemas.user_schemas import LocationPublic
+from app.users.settings_controller import (
     update_user_location,
     add_new_location,
     delete_user_location,
     update_user_settings,
 )
-from utils import db_engine, to_json
+from app.utils import db_engine, to_json
 
 settings_router = APIRouter(prefix="/settings", tags=["settings"])
 

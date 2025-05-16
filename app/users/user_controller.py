@@ -3,14 +3,14 @@ import uuid
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Users
-from users.crud import (
+from app.models import Users
+from app.users.crud import (
     create_new_user,
     get_user,
     link_user_accounts,
     change_user_password,
 )
-from schemas.user_schemas import (
+from app.schemas.user_schemas import (
     UserCreate,
     UserLogin,
     UserAccountsLink,

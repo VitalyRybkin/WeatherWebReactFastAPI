@@ -2,10 +2,8 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import bcrypt
-from sqlalchemy import Column, String, DateTime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr
-from sqlalchemy_json import mutable_json_type
 
 from .base import AbstractBaseModel
 from .tables import Tables
@@ -31,10 +29,6 @@ class Users(AbstractBaseModel):
         user bot id (default value).
     bot_name: str
         user bot nickname.
-    dark_theme: bool
-        user web interface theme (default value).
-    alert: mutable_json_type(dbtype=JSONB)
-        alert schedule jsonb (default value).
     """
 
     __tablename__ = Tables.USERS

@@ -4,16 +4,16 @@ from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Favorites, Users, Wishlist, Settings, Daily, Hourly, Current
-from models.tables import Tables
-from users.crud import (
+from app.models import Favorites, Users, Wishlist, Settings, Daily, Hourly, Current
+from app.models.tables import Tables
+from app.users.crud import (
     alter_location,
     delete_location,
     update_settings,
     get_user,
 )
-from utils import to_json
-from schemas.setting_schemas import (
+from app.utils import to_json
+from app.schemas.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
     HourlySettings,

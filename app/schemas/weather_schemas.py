@@ -2,7 +2,7 @@ from typing import Set, List
 
 from pydantic import BaseModel, ConfigDict
 
-from schemas.setting_schemas import (
+from app.schemas.setting_schemas import (
     CurrentSettings,
     DailySettings,
     HourlySettings,

@@ -1,10 +1,14 @@
 from typing import Any
 
+import sys
+
+sys.path.append("app")
+
 import requests
 from requests import Response
 
-from utils.settings import settings
 from .run_celery import celery_app
+from app.utils.settings import settings
 
 
 @celery_app.task(name="run_tasks.location_by_name", serializer="json")
