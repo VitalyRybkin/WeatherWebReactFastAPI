@@ -51,9 +51,9 @@ class UserSettings(BaseModel):
     daily: int = 3
     hourly: int = 8
     units: str = "F"
-    dark_theme: bool
-    alerts: bool
-    notifications: Dict[int, str]
+    dark_theme: bool = False
+    alerts: bool = False
+    notifications: Dict[int, str] = {}
 
 
 class LocationPublic(BaseModel):

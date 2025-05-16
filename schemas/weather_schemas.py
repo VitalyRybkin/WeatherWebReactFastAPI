@@ -196,8 +196,6 @@ def exclude_fields(
             excluded_fields.update({"avgvis_miles", "avgvis_km"})
         if not daily.humidity:
             excluded_fields.update({"avghumidity"})
-        if not daily.wind_extended:
-            excluded_fields.update({"maxwind_mph", "maxwind_kph"})
         if not daily.astro:
             excluded_fields.update({"astro"})
 

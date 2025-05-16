@@ -1,7 +1,7 @@
 from typing import List
 
 from pydantic import EmailStr
-from sqlalchemy import insert, select, Select, Result, delete
+from sqlalchemy import insert, select, Select, delete
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 

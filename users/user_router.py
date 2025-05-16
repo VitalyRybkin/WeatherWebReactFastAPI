@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from fastapi.params import Depends
 from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
