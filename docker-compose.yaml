@@ -4,11 +4,12 @@ services:
     build:
      context: .
     image: fastapi_app
+    restart: always
+    working_dir: /code
     ports:
       - '8080:8000'
     stop_signal: SIGKILL
-#    command: uvicorn main:app --host 0.0.0.0 --port 8000
-    command: python3 -m app.main
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     networks:
       - monitor-net
 
@@ -35,6 +36,7 @@ services:
     build:
       context: .
     image: fastapi_celery
+    working_dir: /code/app
     restart: always
     command: celery -A celery_tasks.run_celery worker -E --loglevel INFO
     depends_on:
@@ -43,6 +45,7 @@ services:
       - redis:redis
 
   prometheus:
+    user: root
     build:
       context: prometheus
     image: prometheus

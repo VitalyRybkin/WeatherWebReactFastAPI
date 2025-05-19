@@ -1,14 +1,11 @@
 from typing import Any
-
-import sys
-
-sys.path.append("app")
-
 import requests
 from requests import Response
 
 from .run_celery import celery_app
-from app.utils.settings import settings
+
+# from app.utils.settings import settings
+from .config import API_TOKEN as TOKEN
 
 
 @celery_app.task(name="run_tasks.location_by_name", serializer="json")
@@ -20,7 +17,8 @@ def location_by_name(location_name) -> Any | None:
     """
     try:
         result: Response = requests.get(
-            f"https://api.weatherapi.com/v1/search.json?key={settings.api_token}&q={location_name}&aqi=no"
+            # f"https://api.weatherapi.com/v1/search.json?key={settings.api_token}&q={location_name}&aqi=no"
+            f"https://api.weatherapi.com/v1/search.json?key={TOKEN}&q={location_name}&aqi=no"
         )
         return result.json()
     except requests.exceptions.RequestException as re:
@@ -39,7 +37,8 @@ def get_forecast(location_id: int, amount_of_days: int) -> Response | None:
     """
     try:
         forecast_weather_result: Response = requests.get(
-            f"https://api.weatherapi.com/v1/forecast.json?key={settings.api_token}&q=id:{location_id}&days={amount_of_days if amount_of_days > 1 else 2}&aqi=no&alerts=yes"
+            # f"https://api.weatherapi.com/v1/forecast.json?key={settings.api_token}&q=id:{location_id}&days={amount_of_days if amount_of_days > 1 else 2}&aqi=no&alerts=yes"
+            f"https://api.weatherapi.com/v1/forecast.json?key={TOKEN}&q=id:{location_id}&days={amount_of_days if amount_of_days > 1 else 2}&aqi=no&alerts=yes"
         )
         return forecast_weather_result.json()
     except requests.exceptions.RequestException as re:
@@ -51,7 +50,8 @@ def get_forecast(location_id: int, amount_of_days: int) -> Response | None:
 def get_current_weather(location_id) -> Any | None:
     try:
         current_weather_result: Response = requests.get(
-            f"https://api.weatherapi.com/v1/current.json?key={settings.api_token}&q=id:{location_id}&aqi=no"
+            # f"https://api.weatherapi.com/v1/current.json?key={settings.api_token}&q=id:{location_id}&aqi=no"
+            f"https://api.weatherapi.com/v1/current.json?key={TOKEN}&q=id:{location_id}&aqi=no"
         )
         return current_weather_result.json()
     except requests.exceptions.RequestException as re:

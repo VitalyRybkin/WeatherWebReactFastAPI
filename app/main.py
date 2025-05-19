@@ -5,11 +5,11 @@ from fastapi import FastAPI
 from prometheus_client import make_asgi_app
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from api_v1.views import location_router
+from app.api_v1.views import location_router
 from app.models.base import AbstractBaseModel
-from users.settings_router import settings_router
-from users.user_router import user_router
-from utils.db_engine import db_engine
+from app.users.settings_router import settings_router
+from app.users.user_router import user_router
+from app.utils.db_engine import db_engine
 
 
 @asynccontextmanager
