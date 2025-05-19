@@ -1,15 +1,15 @@
 from datetime import datetime
 from typing import Any, List, Dict
 
-from celery_tasks.tasks import location_by_name, get_forecast
-from schemas.setting_schemas import (
+from app.celery_tasks.tasks import location_by_name, get_forecast
+from app.schemas.setting_schemas import (
     LocationPublic,
     CurrentSettings,
     DailySettings,
     HourlySettings,
     UserSettings,
 )
-from schemas.weather_schemas import (
+from app.schemas.weather_schemas import (
     HourlyWeatherBritish,
     HourlyWeatherMetric,
     exclude_fields,

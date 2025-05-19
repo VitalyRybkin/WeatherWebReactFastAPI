@@ -2,14 +2,14 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
-from prometheus_client import make_asgi_app, Counter
+from prometheus_client import make_asgi_app
 from prometheus_fastapi_instrumentator import Instrumentator
 
-from api_v1.views import location_router
-from models import AbstractBaseModel
-from users.settings_router import settings_router
-from users.user_router import user_router
-from utils.db_engine import db_engine
+from app.api_v1.views import location_router
+from app.models.base import AbstractBaseModel
+from app.users.settings_router import settings_router
+from app.users.user_router import user_router
+from app.utils.db_engine import db_engine
 
 
 @asynccontextmanager
@@ -24,15 +24,12 @@ app.include_router(user_router, tags=["users"])
 app.include_router(settings_router, tags=["settings"])
 app.include_router(location_router, tags=["locations"])
 
-REQUEST_COUNTER = Counter("index_counter", "Description of counter", ["endpoint"])
-
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
 
 @app.get("/")
 def index():
-    REQUEST_COUNTER.labels(endpoint="/").inc()
     return "Wellcome to the weather forecast world!"
 
 

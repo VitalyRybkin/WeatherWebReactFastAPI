@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
 
 from asyncio import current_task
 
-from utils.settings import settings
+from app.utils.settings import settings
 
 
 class DatabaseEngine:

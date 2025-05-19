@@ -1,9 +1,10 @@
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models import AbstractBaseModel
-from models.tables import Tables
-from models.users import UserRelationMixin
+from app.models.base import AbstractBaseModel
+
+from app.models.tables import Tables
+from app.models.users import UserRelationMixin
 
 
 class Hourly(UserRelationMixin, AbstractBaseModel):

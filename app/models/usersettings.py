@@ -1,11 +1,14 @@
+import typing
+
 from sqlalchemy import ForeignKey, Column
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy_json import mutable_json_type
 from sqlalchemy.dialects.postgresql import JSONB
 
-from models import AbstractBaseModel
-from models.tables import Tables
-from models.users import UserRelationMixin
+from app.models.tables import Tables
+from app.models.users import UserRelationMixin
+
+from app.models.base import AbstractBaseModel
 
 
 class Settings(UserRelationMixin, AbstractBaseModel):
@@ -25,6 +28,7 @@ class Settings(UserRelationMixin, AbstractBaseModel):
 
     __tablename__ = Tables.SETTINGS
     _user_back_populates = "settings"
+
     users = Tables.USERS
 
     acc_id: Mapped[int] = mapped_column(

@@ -2,18 +2,15 @@ from typing import Any, List
 
 from fastapi import APIRouter
 
-from api_v1.views.location_controller import (
-    get_locations,
-    get_location_weather,
-)
-from schemas.setting_schemas import (
+from .location_controller import get_locations, get_location_weather
+from app.schemas.setting_schemas import (
     UserSettings,
     CurrentSettings,
     HourlySettings,
     DailySettings,
     LocationPublic,
 )
-from schemas.weather_schemas import ForecastPublic
+from app.schemas.weather_schemas import ForecastPublic
 
 location_router = APIRouter(prefix="/api_v1")
 

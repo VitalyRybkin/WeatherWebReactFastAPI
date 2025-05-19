@@ -5,15 +5,15 @@ from sqlalchemy import insert, select, Select, delete
 from sqlalchemy.exc import InterfaceError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
-from schemas.setting_schemas import (
+from app.models import Users, Current, Daily, Hourly, Settings, Favorites, Wishlist
+from app.schemas.setting_schemas import (
     FavoriteLocation,
     CurrentSettings,
     HourlySettings,
     DailySettings,
     UserSettings,
 )
-from utils.utils import handling_integrity_error, handling_interface_error
+from app.utils.utils import handling_integrity_error, handling_interface_error
 
 
 @handling_integrity_error

@@ -7,10 +7,10 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from models import Users
-from schemas.error_response_schemas import BadRequestMessage, ErrorMessage
-from schemas.setting_schemas import SettingsPublic, FavoriteLocation
-from schemas.user_schemas import (
+from app.models import Users
+from app.schemas.error_response_schemas import BadRequestMessage, ErrorMessage
+from app.schemas.setting_schemas import SettingsPublic, FavoriteLocation
+from app.schemas.user_schemas import (
     UserCreate,
     UserLogin,
     UserAccountsLink,
@@ -19,14 +19,14 @@ from schemas.user_schemas import (
     UserFullInfoPublic,
     LoggedUserPublic,
 )
-from users import user_controller
-from users.user_controller import (
+from app.users import user_controller
+from app.users.user_controller import (
     user_logging,
     linking_accounts,
     change_password,
 )
-from utils import to_json
-from utils.db_engine import db_engine
+from app.utils import to_json
+from app.utils.db_engine import db_engine
 
 user_router = APIRouter(prefix="/users")
 
