@@ -63,7 +63,9 @@ services:
     image: grafana/grafana:latest
     volumes:
       - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/default.yaml
-      - ./grafana/dashboard.yaml:/var/lib/grafana/dashboards/default.yaml
+#      - ./grafana/dashboard.yaml:/var/lib/grafana/dashboards/default.yaml
+      - ./grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/main.yaml
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
       - grafana_data:/var/lib/grafana
     ports:
       - '3000:3000'
@@ -72,19 +74,34 @@ services:
     depends_on:
       - prometheus
       - loki
-      - alloy
+      - promtail
     networks:
       - monitor-net
 
-  alloy:
-    volumes:
-      - './grafana/config.alloy:/etc/alloy/config.alloy'
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
     ports:
-      - '12345:12345'
-    image: 'grafana/alloy:latest'
-    command: 'run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy'
+      - "9080:9080"
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./grafana/promtail_config.yaml:/etc/promtail/config.yml
+    command:
+      - -config.file=/etc/promtail/config.yml
+    privileged: true
     networks:
       - monitor-net
+
+#  alloy:
+#    volumes:
+#      - './grafana/config.alloy:/etc/alloy/config.alloy'
+#    ports:
+#      - '12345:12345'
+#    image: 'grafana/alloy:latest'
+#    command: 'run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy'
+#    networks:
+#      - monitor-net
 
 networks:
   monitor-net:
