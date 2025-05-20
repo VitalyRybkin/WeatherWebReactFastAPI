@@ -4,7 +4,7 @@ services:
     build:
      context: .
     image: fastapi_app
-    restart: always
+    restart: unless-stopped
     working_dir: /code
     ports:
       - '8080:8000'
@@ -37,7 +37,7 @@ services:
       context: .
     image: fastapi_celery
     working_dir: /code/app
-    restart: always
+    restart: unless-stopped
     command: celery -A celery_tasks.run_celery worker -E --loglevel INFO
     depends_on:
       - redis
@@ -68,8 +68,11 @@ services:
     ports:
       - '3000:3000'
     stop_signal: SIGKILL
+    restart: unless-stopped
     depends_on:
       - prometheus
+      - loki
+      - alloy
     networks:
       - monitor-net
 
