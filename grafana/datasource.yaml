@@ -6,7 +6,7 @@ datasources:
     access: proxy
     url: http://loki:3100
     jsonData:
-      timeout: 60
+      timeout: 10
       maxLines: 1000
 
   - name: Prometheus
