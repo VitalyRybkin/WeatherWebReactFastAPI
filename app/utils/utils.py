@@ -3,6 +3,8 @@ from typing import Callable
 
 from sqlalchemy.exc import IntegrityError, InterfaceError
 
+from app.logger.logging_handler import database_logger
+
 
 def to_json(table):
     """
@@ -23,7 +25,11 @@ def handling_integrity_error(func) -> Callable:
         try:
             return await func(*args, **kwargs)
         except IntegrityError as e:
-            print(e)
+            func_args: list = [arg for arg in args]
+            func_kwargs: dict = {k: v for k, v in kwargs.items()}
+            database_logger.error(
+                exc_info=e, func_args=func_args, func_kwargs=func_kwargs
+            )
             return e
 
     return wrapper
@@ -36,13 +42,26 @@ def handling_interface_error(func) -> Callable:
         try:
             return await func(*args, **kwargs)
         except InterfaceError as e:
-            print(e)
+            func_args: list = [arg for arg in args]
+            func_kwargs: dict = {k: v for k, v in kwargs.items()}
+            database_logger.error(
+                exc_info=e,
+                func_args=func_args,
+                func_kwargs=func_kwargs,
+            )
             await session.rollback()
             await session.flush()
             try:
                 return await func(*args, **kwargs)
             except Exception as exc:
-                print(f"Reconnection failed: {exc}")
+                func_args: list = [arg for arg in args]
+                func_kwargs: dict = {k: v for k, v in kwargs.items()}
+                database_logger.error(
+                    msg=f"Reconnection failed!",
+                    exc_info=exc,
+                    func_args=func_args,
+                    func_kwargs=func_kwargs,
+                )
             return e
 
     return wrapper

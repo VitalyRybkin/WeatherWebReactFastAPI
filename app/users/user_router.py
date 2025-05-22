@@ -7,6 +7,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
+from app.logger.logging_config import Loggers
 from app.models import Users
 from app.schemas.error_response_schemas import BadRequestMessage, ErrorMessage
 from app.schemas.setting_schemas import SettingsPublic, FavoriteLocation
@@ -27,7 +28,7 @@ from app.users.user_controller import (
 )
 from app.utils import to_json
 from app.utils.db_engine import db_engine
-from app.logger.logging_handler import get_logger
+from app.logger.logging_handler import get_logger, basic_logger
 
 user_router = APIRouter(prefix="/users")
 
@@ -73,9 +74,10 @@ async def create_user(
     user_settings = await get_settings_dict(new_user)
     user_settings_response: SettingsPublic = SettingsPublic(**user_settings)
     user_info: UserPublic = UserPublic(**to_json(new_user))
+
     # TODO add email notification
-    registration_logger = get_logger("registration")
-    registration_logger.info(msg=user_info)
+
+    basic_logger.info(msg=user_info)
 
     return UserFullInfoPublic(user_info=user_info, user_settings=user_settings_response)
 
