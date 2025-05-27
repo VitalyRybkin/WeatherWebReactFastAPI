@@ -1,14 +1,15 @@
-import typing
+"""
+Module. User settings SQLAlchemy database model.
+"""
 
 from sqlalchemy import ForeignKey, Column
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy_json import mutable_json_type
-from sqlalchemy.dialects.postgresql import JSONB
-
-from app.models.tables import Tables
-from app.models.users import UserRelationMixin
 
 from app.models.base import AbstractBaseModel
+from app.models.tables import Tables
+from app.models.users import UserRelationMixin
 
 
 class Settings(UserRelationMixin, AbstractBaseModel):
@@ -55,7 +56,15 @@ class Settings(UserRelationMixin, AbstractBaseModel):
         daily: int = None,
         hourly: int = None,
         units: str = None,
-    ):
+    ) -> None:
+        """
+        Function. Update user settings.
+        :param current: current weather user settings.
+        :param daily: daily weather user settings.
+        :param hourly: hourly weather user settings.
+        :param units: units user settings.
+        :return: None
+        """
         self.current = current
         self.daily = daily
         self.hourly = hourly
@@ -69,6 +78,6 @@ class Settings(UserRelationMixin, AbstractBaseModel):
             f"daily={self.daily},"
             f"hourly={self.hourly},"
             f"units={self.units}>"
-            f"parent={self.parent.__repr__()}"
+            f"parent={self.parent.__repr__}"
             f")>"
         )

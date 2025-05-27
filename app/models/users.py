@@ -1,3 +1,7 @@
+"""
+Module. Users data SQLAlchemy database model.
+"""
+
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -35,10 +39,10 @@ class Users(AbstractBaseModel):
 
     login: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column(nullable=True)
-    # TODO check for timezone
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now(timezone.utc)
-    )
+    )  # TODO check for timezone # pylint: disable=W0511
 
     email_conf: Mapped[bool] = False
     bot_id: Mapped[int] = mapped_column(nullable=True)
@@ -116,21 +120,33 @@ class Users(AbstractBaseModel):
             f"created_at={self.created_at}, "
             f"bot_id={self.bot_id}, "
             f"bot_name={self.bot_name}, "
-            f"dark_theme={self.dark_theme}, "
-            f"alert={self.alert}"
             f")>"
         )
 
 
 class UserRelationMixin:
+    """
+    Class. Mixin class for user relations.
+    Attributes
+    --------
+    _user_back_populates: str | None = None
+        back populates variable name
+    _user_single_parent: bool = True
+        one-to-many relation flag
+    """
+
     _user_back_populates: str | None = None
     _user_single_parent: bool = True
 
     @declared_attr
-    def parent(cls) -> Mapped[Users]:
+    def parent(self) -> Mapped[Users]:
+        """
+        Function. Return user relationship settings.
+        :return:
+        """
         return relationship(
             f"{Tables.USERS.title()}",
-            single_parent=cls._user_single_parent,
-            back_populates=cls._user_back_populates,
+            single_parent=self._user_single_parent,
+            back_populates=self._user_back_populates,
             cascade="all, delete",
         )

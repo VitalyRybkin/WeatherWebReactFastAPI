@@ -1,3 +1,7 @@
+"""
+Module. Get data from DB and API and prepare it to be passed to the settings router.
+"""
+
 from typing import Type
 
 from pydantic import EmailStr
@@ -116,11 +120,22 @@ async def update_user_settings(
     settings: UserSettings,
     session: AsyncSession,
 ) -> list[Current | Hourly | Daily | UserSettings] | InterfaceError | None:
+    """
+    Function. Handling updating user settings.
+    :param login: user login.
+    :param bot_name: bot name.
+    :param current: current settings.
+    :param hourly: hourly settings.
+    :param daily: daily settings.
+    :param settings: user settings
+    :param session: database session
+    :return: list of current or hourly or daily settings or user settings.
+    """
     user_info: Users | InterfaceError | None = await get_user(
         session=session, user_login=login, bot_name=bot_name
     )
 
-    # TODO change to dict update (setattr)
+    # TODO change to dict update (setattr) # pylint: disable=W0511
     if isinstance(user_info, Users):
         settings_updated: list[Current | Hourly | Daily | Settings] = (
             await update_settings(

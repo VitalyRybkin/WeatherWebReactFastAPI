@@ -1,16 +1,23 @@
-import logging
+"""
+Module. Logger configuration.
+"""
+
 from dataclasses import dataclass
-from time import strftime, gmtime
+from enum import StrEnum
 from typing import Dict, Any
 
 
 @dataclass
-class Loggers:
-    basic: str = "BASIC_LOGGER"
-    database_err: str = "DATABASE_LOGGER"
+class Loggers(StrEnum):
+    basic = "BASIC_LOGGER"
+    database_err = "DATABASE_LOGGER"
 
 
 def get_logging_config() -> Dict[str, Any]:
+    """
+    Function. Get logging configuration.
+    :return: logging configuration dictionary.
+    """
     dict_config: dict = {
         "version": 1,
         "disable_existing_loggers": False,

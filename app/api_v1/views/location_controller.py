@@ -1,3 +1,7 @@
+"""
+Module. Get data from DB and API and prepare it to be passed to the router.
+"""
+
 from datetime import datetime
 from typing import Any, List, Dict
 
@@ -55,7 +59,6 @@ def get_location_weather(
     :param current_settings: current weather user settings
     :return: current weather data
     """
-    # TODO retry logic
 
     weather_forecast = get_forecast.apply_async(args=[location_id, user_settings.daily])
     location_weather: Dict[str, Any] = weather_forecast.get()
@@ -150,7 +153,6 @@ def get_location_weather(
             HourlyForecastPublic.model_validate(hour_weather_filter)
         )
 
-    # TODO handle alert model if needed
     location_weather_response.update(alerts=location_weather["alerts"])
 
     return location_weather_response

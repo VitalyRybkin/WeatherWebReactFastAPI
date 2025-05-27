@@ -1,9 +1,14 @@
+"""
+Main app module - start FastAPI app.
+"""
+
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
 from prometheus_client import make_asgi_app
 from prometheus_fastapi_instrumentator import Instrumentator
+from starlette.middleware.cors import CORSMiddleware
 
 from app.api_v1.views import location_router
 from app.models.base import AbstractBaseModel
@@ -13,7 +18,12 @@ from app.utils.db_engine import db_engine
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # pylint: disable=W0613, W0621
+    """
+    Function. Create database.
+    :param app: FastAPI
+    :return: None
+    """
     async with db_engine.engine.begin() as conn:
         await conn.run_sync(AbstractBaseModel.metadata.create_all)
     yield
@@ -27,9 +37,22 @@ app.include_router(location_router, tags=["locations"])
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
 
+origins: list[str] = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 def index():
+    """
+    Function. Main page - start message.
+    :return: string
+    """
     return "Wellcome to the weather forecast world!"
 
 

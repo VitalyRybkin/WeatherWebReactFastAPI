@@ -1,3 +1,7 @@
+"""
+Module. Settings operations API routes.
+"""
+
 from typing import List, Union
 
 from fastapi import APIRouter, status
@@ -87,7 +91,8 @@ async def add_new_user_location(
             },
         )
 
-    if user_info is IntegrityError or type(user_info) is IntegrityError:
+    # if user_info is IntegrityError or type(user_info) is IntegrityError:
+    if isinstance(user_info, IntegrityError):
         if target == "wishlist":
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
@@ -95,13 +100,12 @@ async def add_new_user_location(
                     "message": "Error on adding location!. Location already exists."
                 },
             )
-        else:
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={
-                    "message": "Location could not be added. User already has favorite location set."
-                },
-            )
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={
+                "message": "Location could not be added. User already has favorite location set."
+            },
+        )
 
     if target == "wishlist" and user_info.wishlist:
         return [LocationPublic(**to_json(loc)) for loc in user_info.wishlist]

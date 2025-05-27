@@ -1,3 +1,7 @@
+"""
+Module. Current weather data SQLAlchemy database model.
+"""
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -47,7 +51,15 @@ class Current(UserRelationMixin, AbstractBaseModel):
         pressure: bool = None,
         visibility: bool = None,
         humidity: bool = None,
-    ):
+    ) -> None:
+        """
+        Function to update current weather display settings.
+        :param wind_extended: wind extended forecast display (default=False)
+        :param pressure: pressure forecast display (default=False)
+        :param visibility: visibility forecast display (default=False)
+        :param humidity: humidity forecast display (default=False)
+        :return: None
+        """
         self.wind_extended = wind_extended
         self.pressure = pressure
         self.visibility = visibility

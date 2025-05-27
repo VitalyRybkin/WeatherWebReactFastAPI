@@ -1,3 +1,7 @@
+"""
+Module. User favorite location info SQLAlchemy database model.
+"""
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -40,7 +44,15 @@ class Favorites(UserRelationMixin, AbstractBaseModel):
 
     def update_location(
         self, loc_id: int, loc_name: str, loc_region: str, loc_country: str
-    ):
+    ) -> None:
+        """
+        Function. Update user favorite location info.
+        :param loc_id: user favorite location ID (nullable=False)
+        :param loc_name: user favorite location name (String(100), nullable=False)
+        :param loc_region: user favorite location region (String(100), nullable=False)
+        :param loc_country: user favorite location country (String(100), nullable=False)
+        :return: None
+        """
         self.loc_id = loc_id
         self.loc_name = loc_name
         self.loc_region = loc_region

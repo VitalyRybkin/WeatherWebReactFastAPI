@@ -1,8 +1,13 @@
+"""
+Module. Location API routes.
+"""
+
 from typing import Any, List
 
 from fastapi import APIRouter
 
-from .location_controller import get_locations, get_location_weather
+from app.schemas.weather_schemas import ForecastPublic
+
 from app.schemas.setting_schemas import (
     UserSettings,
     CurrentSettings,
@@ -10,7 +15,7 @@ from app.schemas.setting_schemas import (
     DailySettings,
     LocationPublic,
 )
-from app.schemas.weather_schemas import ForecastPublic
+from .location_controller import get_locations, get_location_weather
 
 location_router = APIRouter(prefix="/api_v1")
 
@@ -44,6 +49,15 @@ def get_forecast_by_id(
     hourly: HourlySettings,
     daily: DailySettings,
 ) -> dict[str, Any] | None:
+    """
+    Function to get forecast by ID.
+    :param location_id: location ID.
+    :param settings: user settings.
+    :param current: current weather user settings.
+    :param hourly: hourly weather user settings.
+    :param daily: daily weather user settings.
+    :return: forecast info
+    """
 
     forecast_info = get_location_weather(
         location_id,

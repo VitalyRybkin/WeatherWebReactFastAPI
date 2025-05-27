@@ -1,12 +1,16 @@
+"""
+Module. Functions to handle application operations.
+"""
+
 import functools
-from typing import Callable
+from typing import Callable, Any
 
 from sqlalchemy.exc import IntegrityError, InterfaceError
 
 from app.logger.logging_handler import database_logger
 
 
-def to_json(table):
+def to_json(table) -> dict[Any, Any] | None:
     """
     Function. Convert table to JSON
     """
@@ -20,13 +24,21 @@ def to_json(table):
 
 
 def handling_integrity_error(func) -> Callable:
+    """
+    Function. Handle IntegrityError decorator
+    :param func: callable function
+    :return: function
+    """
+
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
         except IntegrityError as e:
-            func_args: list = [arg for arg in args]
-            func_kwargs: dict = {k: v for k, v in kwargs.items()}
+            # func_args: list = [arg for arg in args]
+            func_args: list = list(args)
+            # func_kwargs: dict = {k: v for k, v in kwargs.items()}
+            func_kwargs: dict = dict(kwargs)
             database_logger.error(
                 exc_info=e, func_args=func_args, func_kwargs=func_kwargs
             )
@@ -36,14 +48,22 @@ def handling_integrity_error(func) -> Callable:
 
 
 def handling_interface_error(func) -> Callable:
+    """
+    Function. Handle InterfaceError decorator
+    :param func: callable function
+    :return: function
+    """
+
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         session = kwargs.get("session")
         try:
             return await func(*args, **kwargs)
         except InterfaceError as e:
-            func_args: list = [arg for arg in args]
-            func_kwargs: dict = {k: v for k, v in kwargs.items()}
+            # func_args: list = [arg for arg in args]
+            func_args: list = list(args)
+            # func_kwargs: dict = {k: v for k, v in kwargs.items()}
+            func_kwargs: dict = dict(kwargs)
             database_logger.error(
                 exc_info=e,
                 func_args=func_args,
@@ -54,10 +74,12 @@ def handling_interface_error(func) -> Callable:
             try:
                 return await func(*args, **kwargs)
             except Exception as exc:
-                func_args: list = [arg for arg in args]
-                func_kwargs: dict = {k: v for k, v in kwargs.items()}
+                func_args: list = list(args)
+                # func_args: list = [arg for arg in args]
+                # func_kwargs: dict = {k: v for k, v in kwargs.items()}
+                func_kwargs: dict = dict(kwargs)
                 database_logger.error(
-                    msg=f"Reconnection failed!",
+                    msg="Reconnection failed!",
                     exc_info=exc,
                     func_args=func_args,
                     func_kwargs=func_kwargs,

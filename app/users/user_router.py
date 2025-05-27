@@ -1,3 +1,7 @@
+"""
+Module. User operations (registration, login, change password etc.) API routes.
+"""
+
 from typing import Any, List, Dict
 
 from fastapi import APIRouter, status
@@ -7,7 +11,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
-from app.logger.logging_config import Loggers
+from app.logger.logging_handler import basic_logger
 from app.models import Users
 from app.schemas.error_response_schemas import BadRequestMessage, ErrorMessage
 from app.schemas.setting_schemas import SettingsPublic, FavoriteLocation
@@ -28,7 +32,6 @@ from app.users.user_controller import (
 )
 from app.utils import to_json
 from app.utils.db_engine import db_engine
-from app.logger.logging_handler import get_logger, basic_logger
 
 user_router = APIRouter(prefix="/users")
 
@@ -57,13 +60,15 @@ async def create_user(
         await user_controller.create_user(session=session, new_user=new_user)
     )
 
-    if type(new_user) is IntegrityError:
+    # if type(new_user) is IntegrityError:
+    if isinstance(new_user, IntegrityError):
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={"message": "User could not be created. User already exists."},
         )
 
-    if type(new_user) is InterfaceError:
+    # if type(new_user) is InterfaceError:
+    if isinstance(new_user, InterfaceError):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
@@ -111,7 +116,8 @@ async def login(
         user=user_to_log_in, session=session
     )
 
-    if type(logged_user) is InterfaceError:
+    # if type(logged_user) is InterfaceError:
+    if isinstance(logged_user, InterfaceError):
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
@@ -153,6 +159,11 @@ async def login(
 
 
 async def get_settings_dict(logged_user) -> dict[str, Any]:
+    """
+    Function. User settings dict parsed from DB response.
+    :param logged_user: logged user data
+    :return: user settings as dict
+    """
     user_settings: dict = {}
     user_settings.update(
         {logged_user.settings.__tablename__: to_json(logged_user.settings)}
@@ -245,7 +256,8 @@ async def update_user_password(
             content={"message": "Incorrect password."},
         )
 
-    if type(user_password_changed) is InterfaceError:
+    # if type(user_password_changed) is InterfaceError:
+    if isinstance(user_password_changed, InterfaceError):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={

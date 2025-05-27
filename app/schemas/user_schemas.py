@@ -1,3 +1,7 @@
+"""
+Module. User pydentic models.
+"""
+
 from typing import Annotated, List, Dict
 
 from annotated_types import MinLen, MaxLen
@@ -63,8 +67,6 @@ class UserCreate(UserBase, UserPassword, UserTelegram):
     Pydentic model for user creation
     """
 
-    pass
-
 
 class UserLogin(UserBase, UserPassword):
     """
@@ -79,12 +81,18 @@ class UserAccountsLink(UserBase, UserTelegram):
     Pydentic model for user accounts link
     """
 
-    pass
-
 
 class UserChangePassword(UserBase, UserPassword):
     """
-    Pydentic model for user change password
+    Pydentic model for user change password.
+    Attributes
+    --------
+    login: EmailStr
+        user's email as a unique login
+    password: str | None
+        user account password
+    new_password: str | None
+        user new account password
     """
 
     new_password: Annotated[str, MinLen(5), MaxLen(15)] | None = None
@@ -93,6 +101,16 @@ class UserChangePassword(UserBase, UserPassword):
 class LocationPublic(BaseModel):
     """
     Pydentic model for user location response
+    Attributes
+    --------
+    loc_id: int
+        location's id
+    loc_name: str
+        location's name
+    loc_region: str
+        location's region
+    loc_country: str
+        location's country
     """
 
     loc_id: int
@@ -104,6 +122,12 @@ class LocationPublic(BaseModel):
 class UserFullInfoPublic(BaseModel):
     """
     Pydentic model for user creation response
+    Attributes
+    ---------
+    user_info: UserPublic
+        user info pydantic model
+    user_settings: SettingsPublic
+        user settings pydantic model
     """
 
     model_config = ConfigDict()
@@ -114,6 +138,12 @@ class UserFullInfoPublic(BaseModel):
 class LoggedUserPublic(UserFullInfoPublic):
     """
     Pydentic model for user login response
+    Attributes
+    --------
+    favorite: FavoriteLocation | Dict
+        user's favorite location pydentic model
+    wishlist: List[FavoriteLocation] | List
+        user's wishlist pydentic model
     """
 
     # user_info: UserPublic

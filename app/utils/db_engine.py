@@ -1,4 +1,10 @@
+"""
+Module.Set database connection class
+"""
+
 from typing import Any, AsyncGenerator
+
+from asyncio import current_task
 
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -8,12 +14,14 @@ from sqlalchemy.ext.asyncio import (
 )
 
 
-from asyncio import current_task
-
 from app.utils.settings import settings
 
 
 class DatabaseEngine:
+    """
+    Class. Database engine class.
+    """
+
     def __init__(self):
         self.engine = create_async_engine(
             url=settings.db_conn,
@@ -29,6 +37,10 @@ class DatabaseEngine:
         )
 
     def scoped_session(self) -> async_scoped_session[AsyncSession]:
+        """
+        Function. Scoped session factory.
+        :return:
+        """
         return async_scoped_session(
             session_factory=self.session,
             scopefunc=current_task,
@@ -37,6 +49,10 @@ class DatabaseEngine:
     async def session_dependency(
         self,
     ) -> AsyncGenerator[async_scoped_session[AsyncSession | Any], Any]:
+        """
+        Function. Dependency session factory.
+        :return:
+        """
         session = self.scoped_session()
         yield session
         await session.close()

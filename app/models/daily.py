@@ -1,3 +1,7 @@
+"""
+Module. Daily forecast data SQLAlchemy database model.
+"""
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -44,7 +48,14 @@ class Daily(UserRelationMixin, AbstractBaseModel):
         astro: bool = None,
         visibility: bool = None,
         humidity: bool = None,
-    ):
+    ) -> None:
+        """
+        Function to update daily display settings.
+        :param astro: astro info display (default=False)
+        :param visibility: visibility forecast display (default=False)
+        :param humidity: humidity forecast display (default=False)
+        :return: None
+        """
         self.astro = astro
         self.visibility = visibility
         self.humidity = humidity

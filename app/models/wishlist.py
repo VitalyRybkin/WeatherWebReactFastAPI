@@ -1,3 +1,7 @@
+"""
+Module. Wishlist SQLAlchemy database model.
+"""
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -8,7 +12,7 @@ from .users import UserRelationMixin
 
 class Wishlist(UserRelationMixin, AbstractBaseModel):
     """
-    SQLAlchemy model for storing user'sWishlist.
+    SQLAlchemy model for storing user's Wishlist.
     Attributes
     ----------
     loc_id: int

@@ -1,3 +1,7 @@
+"""
+Module. Get data from DB and API and prepare it to be passed to the router.
+"""
+
 import uuid
 
 from sqlalchemy.exc import InterfaceError, IntegrityError
@@ -53,9 +57,11 @@ async def user_logging(
     )
 
     if (
-        type(user_found) is Users
+        # type(user_found) is Users
+        isinstance(user_found, Users)
         and user_found.verify_password(user.password.encode())
-        or type(user_found) is InterfaceError
+        # or type(user_found) is InterfaceError
+        or isinstance(user_found, InterfaceError)
     ):
         return user_found
 
@@ -81,7 +87,8 @@ async def linking_accounts(
     if not bot_user_info:
         return None
 
-    if type(bot_user_info) is Users and type(web_user_info) is Users:
+    # if type(bot_user_info) is Users and type(web_user_info) is Users:
+    if isinstance(bot_user_info, Users) and isinstance(web_user_info, Users):
         web_user_info.bot_id = bot_user_info.bot_id
         web_user_info.bot_name = bot_user_info.bot_name
 
@@ -107,7 +114,8 @@ async def change_password(
         session=session, user_login=user.login
     )
 
-    if type(user_info) is Users:
+    # if type(user_info) is Users:
+    if isinstance(user_info, Users):
         if user_info.verify_password(user.password.encode()):
             user_info.password = Users.hash_password(user.new_password)
             user_info: Users = await change_user_password(

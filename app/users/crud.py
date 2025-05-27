@@ -1,3 +1,7 @@
+"""
+Module. Get data from DB and prepare it to be passed to the controller.
+"""
+
 from typing import List
 
 from pydantic import EmailStr
@@ -66,7 +70,7 @@ async def link_user_accounts(
     session: AsyncSession, web_user: Users, bot_user: Users
 ) -> Users | InterfaceError:
     """
-    Function. Updates user accounts - adding bot account to a web account. Deletes user's bot-only account.
+    Function. Updates user accounts - adding bot account to a web account. Deletes user's bot-only account. # pylint: disable=line-too-long
     :param bot_user: Bot user info to delete
     :param web_user: web user info to update.
     :param session: SQLAlchemy session.
@@ -147,6 +151,16 @@ async def update_settings(
     daily_settings: DailySettings,
     user_settings: UserSettings,
 ) -> List[Current | Hourly | Daily | UserSettings]:
+    """
+    Function. Updates user settings.
+    :param session: DB session.
+    :param user_info: user info.
+    :param current_settings: current user settings.
+    :param hourly_settings: hourly user settings.
+    :param daily_settings: daily user settings.
+    :param user_settings: user user settings
+    :return: list of updated user settings.
+    """
     updated_settings: List[Current | Hourly | Daily | Settings] = []
 
     if user_settings:

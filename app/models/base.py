@@ -1,3 +1,7 @@
+"""
+Module. Abstract base SQLAlchemy model.
+"""
+
 from sqlalchemy import Column, Integer
 from sqlalchemy.orm import DeclarativeBase
 

@@ -1,15 +1,21 @@
-from dataclasses import dataclass
+"""
+Module. Table names storage.
+"""
+
+# from dataclasses import dataclass
+from enum import StrEnum
 
 
-@dataclass
-class Tables:
+# @dataclass
+class Tables(StrEnum):
     """
-    Dataclass to store table names
+    Class. Table names storage.
     """
-    USERS: str = "users"
-    WISHLIST: str = "wishlist"
-    SETTINGS: str = "settings"
-    HOURLY: str = "hourly"
-    CURRENT: str = "current"
-    DAILY: str = "daily"
-    FAVORITES: str = "favorites"
+
+    USERS = "users"
+    WISHLIST = "wishlist"
+    SETTINGS = "settings"
+    HOURLY = "hourly"
+    CURRENT = "current"
+    DAILY = "daily"
+    FAVORITES = "favorites"

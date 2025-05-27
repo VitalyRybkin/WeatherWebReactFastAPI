@@ -16,10 +16,11 @@ services:
   redis:
     image: redis:latest
     restart: always
-    expose:
-      - '6379'
     ports:
       - '6379:6379'
+    stop_signal: SIGKILL
+    networks:
+      - monitor-net
 
   loki:
     image: grafana/loki:3.0.0
@@ -42,7 +43,9 @@ services:
     depends_on:
       - redis
     links:
-      - redis:redis
+      - redis
+    networks:
+      - monitor-net
 
   prometheus:
     user: root
