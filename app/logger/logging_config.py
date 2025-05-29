@@ -8,9 +8,9 @@ from typing import Dict, Any
 
 
 @dataclass
-class Loggers(StrEnum):
-    basic = "BASIC_LOGGER"
-    database_err = "DATABASE_LOGGER"
+class Loggers:
+    basic: str = "BASIC_LOGGER"
+    database_err: str = "DATABASE_LOGGER"
 
 
 def get_logging_config() -> Dict[str, Any]:

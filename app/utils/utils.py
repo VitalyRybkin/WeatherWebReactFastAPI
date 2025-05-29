@@ -40,7 +40,8 @@ def handling_integrity_error(func) -> Callable:
             # func_kwargs: dict = {k: v for k, v in kwargs.items()}
             func_kwargs: dict = dict(kwargs)
             database_logger.error(
-                exc_info=e, func_args=func_args, func_kwargs=func_kwargs
+                msg="Database integrity error.",
+                exc_info=e,
             )
             return e
 
@@ -65,9 +66,8 @@ def handling_interface_error(func) -> Callable:
             # func_kwargs: dict = {k: v for k, v in kwargs.items()}
             func_kwargs: dict = dict(kwargs)
             database_logger.error(
+                msg="Database connection error",
                 exc_info=e,
-                func_args=func_args,
-                func_kwargs=func_kwargs,
             )
             await session.rollback()
             await session.flush()
@@ -81,8 +81,6 @@ def handling_interface_error(func) -> Callable:
                 database_logger.error(
                     msg="Reconnection failed!",
                     exc_info=exc,
-                    func_args=func_args,
-                    func_kwargs=func_kwargs,
                 )
             return e
 

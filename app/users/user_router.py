@@ -33,7 +33,7 @@ from app.users.user_controller import (
 from app.utils import to_json
 from app.utils.db_engine import db_engine
 
-user_router = APIRouter(prefix="/users")
+user_router = APIRouter(prefix="/c")
 
 
 @user_router.post(
@@ -131,7 +131,6 @@ async def login(
             content={"message": "Incorrect username or password."},
         )
 
-    # TODO move user_settings dict to controller
     user_settings: SettingsPublic = SettingsPublic(
         **await get_settings_dict(logged_user)
     )
