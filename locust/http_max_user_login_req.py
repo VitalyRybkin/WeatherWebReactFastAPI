@@ -15,8 +15,9 @@ class DBUser(HttpUser):
             "user_login": f"{cfg.user_login}",
             "user_password": f"{cfg.user_password}",
         }
-        with self.client.get(
-            f"/users/login/?user_login={cfg.user_login}&user_password={cfg.user_password}",
+        with self.client.post(
+            f"/users/login/",
+            json=body,
             catch_response=True,
             name=self.login_user.__name__,
         ) as request:

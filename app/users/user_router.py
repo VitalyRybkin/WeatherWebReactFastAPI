@@ -2,9 +2,9 @@
 Module. User operations (registration, login, change password etc.) API routes.
 """
 
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Body
 from fastapi.params import Depends
 from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
@@ -33,7 +33,7 @@ from app.users.user_controller import (
 from app.utils import to_json
 from app.utils.db_engine import db_engine
 
-user_router = APIRouter(prefix="/c")
+user_router = APIRouter(prefix="/users", tags=["users"])
 
 
 @user_router.post(
@@ -87,7 +87,7 @@ async def create_user(
     return UserFullInfoPublic(user_info=user_info, user_settings=user_settings_response)
 
 
-@user_router.get(
+@user_router.post(
     "/login/",
     summary="User login with e-mail and password",
     response_model=LoggedUserPublic,
@@ -98,8 +98,8 @@ async def create_user(
     },
 )
 async def login(
-    user_login: EmailStr,
-    user_password: str,
+    user_login: Annotated[EmailStr, Body()],
+    user_password: Annotated[str, Body()],
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse | LoggedUserPublic:
     """
