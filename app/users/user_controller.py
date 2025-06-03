@@ -3,23 +3,29 @@ Module. Get data from DB and API and prepare it to be passed to the router.
 """
 
 import uuid
+from typing import Annotated, Any, Coroutine
 
+from fastapi import Depends, Form
+from fastapi.security import HTTPBasic
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
+from starlette.exceptions import HTTPException
 
 from app.models import Users
-from app.users.crud import (
-    create_new_user,
-    get_user,
-    link_user_accounts,
-    change_user_password,
-)
 from app.schemas.user_schemas import (
     UserCreate,
     UserLogin,
     UserAccountsLink,
     UserChangePassword,
 )
+from app.users.crud import (
+    create_new_user,
+    get_user,
+    link_user_accounts,
+    change_user_password,
+)
+from app.utils import db_engine
 
 
 async def create_user(
@@ -42,28 +48,35 @@ async def create_user(
     return user_created
 
 
+# security = HTTPBasic()
+
+
 async def user_logging(
-    user: UserLogin, session: AsyncSession
-) -> Users | InterfaceError | None:
+    login: str = Form(...),
+    password: str = Form(...),
+    session: AsyncSession = Depends(db_engine.session_dependency),
+) -> Users | None | type[InterfaceError]:
     """
     Function. Handling user logging in.
-    :param user: user information (login, password)
+    :param password: user password
+    :param login: user login
     :param session: AsyncSession
-    :return: whether user was logged in or an error on incorrect login or password
+    :return:  whether a user was logged in or an error on incorrect login or password
     """
 
     user_found: Users | InterfaceError | None = await get_user(
-        session=session, user_login=user.login
+        session=session, user_login=login
     )
 
     if (
-        # type(user_found) is Users
-        isinstance(user_found, Users)
-        and user_found.verify_password(user.password.encode())
-        # or type(user_found) is InterfaceError
-        or isinstance(user_found, InterfaceError)
+        user_found
+        and type(user_found) is Users
+        and user_found.verify_password(password.encode())
     ):
         return user_found
+
+    if type(user_found) is InterfaceError:
+        return InterfaceError
 
     return None
 

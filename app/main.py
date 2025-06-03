@@ -47,7 +47,7 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/", tags=["root"])
 def index():
     """
     Function. Main page - start message.

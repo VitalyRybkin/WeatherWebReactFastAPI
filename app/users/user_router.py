@@ -92,32 +92,21 @@ async def create_user(
     summary="User login with e-mail and password",
     response_model=LoggedUserPublic,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorMessage},
         status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessage},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": BadRequestMessage},
     },
 )
 async def login(
-    user_login: Annotated[EmailStr, Body()],
-    user_password: Annotated[str, Body()],
-    session: AsyncSession = Depends(db_engine.session_dependency),
+    logged_user: Users | None | type[InterfaceError] = Depends(user_logging),
 ) -> JSONResponse | LoggedUserPublic:
     """
     Function. Logs a user in.
-    :param user_login: User login (an email address)
-    :param user_password: user password
-    :param session: AsyncSession
-    :return: whether the user was successfully logged in or not (HTTP error)
+    :param logged_user:
+    :return: Whether the user was successfully logged in or not (HTTP error)
     """
 
-    user_to_log_in: UserLogin = UserLogin(login=user_login, password=user_password)
-
-    logged_user: Users | InterfaceError | None = await user_logging(
-        user=user_to_log_in, session=session
-    )
-
-    # if type(logged_user) is InterfaceError:
-    if isinstance(logged_user, InterfaceError):
+    if type(logged_user) is InterfaceError:
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
