@@ -35,10 +35,6 @@ def handling_integrity_error(func) -> Callable:
         try:
             return await func(*args, **kwargs)
         except IntegrityError as e:
-            # func_args: list = [arg for arg in args]
-            func_args: list = list(args)
-            # func_kwargs: dict = {k: v for k, v in kwargs.items()}
-            func_kwargs: dict = dict(kwargs)
             database_logger.error(
                 msg="Database integrity error.",
                 exc_info=e,
@@ -61,10 +57,6 @@ def handling_interface_error(func) -> Callable:
         try:
             return await func(*args, **kwargs)
         except InterfaceError as e:
-            # func_args: list = [arg for arg in args]
-            func_args: list = list(args)
-            # func_kwargs: dict = {k: v for k, v in kwargs.items()}
-            func_kwargs: dict = dict(kwargs)
             database_logger.error(
                 msg="Database connection error",
                 exc_info=e,
@@ -74,10 +66,6 @@ def handling_interface_error(func) -> Callable:
             try:
                 return await func(*args, **kwargs)
             except Exception as exc:
-                func_args: list = list(args)
-                # func_args: list = [arg for arg in args]
-                # func_kwargs: dict = {k: v for k, v in kwargs.items()}
-                func_kwargs: dict = dict(kwargs)
                 database_logger.error(
                     msg="Reconnection failed!",
                     exc_info=exc,

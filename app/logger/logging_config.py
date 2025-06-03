@@ -2,8 +2,8 @@
 Module. Logger configuration.
 """
 
+import logging
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import Dict, Any
 
 
@@ -11,6 +11,17 @@ from typing import Dict, Any
 class Loggers:
     basic: str = "BASIC_LOGGER"
     database_err: str = "DATABASE_LOGGER"
+
+
+class LevelFileHandler(logging.Handler):
+    def __init__(self, mode="a"):
+        super().__init__()
+        self.mode = mode
+
+    def emit(self, record):
+        with open(f"DB_{record.levelname}.log", self.mode) as f:
+            msg = self.format(record)
+            f.write(msg + "\n")
 
 
 def get_logging_config() -> Dict[str, Any]:
@@ -35,6 +46,11 @@ def get_logging_config() -> Dict[str, Any]:
                 "formatter": "default",
             },
             "db_err_file": {
+                "()": LevelFileHandler,
+                "formatter": "default",
+                "mode": "a",
+            },
+            "time_rotating": {
                 "class": "logging.handlers.TimedRotatingFileHandler",
                 "backupCount": 5,
                 "formatter": "default",
@@ -52,6 +68,11 @@ def get_logging_config() -> Dict[str, Any]:
             f"{Loggers.database_err}": {
                 "handlers": ["db_err_file"],
                 "level": "ERROR",
+            },
+            f"{Loggers.database_err}.utils": {
+                "handlers": ["time_rotating"],
+                "level": "ERROR",
+                "propagate": False,
             },
         },
     }
