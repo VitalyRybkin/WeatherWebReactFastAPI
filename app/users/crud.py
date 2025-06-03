@@ -4,6 +4,7 @@ Module. Get data from DB and prepare it to be passed to the controller.
 
 from typing import List
 
+from fastapi import Depends
 from pydantic import EmailStr
 from sqlalchemy import insert, select, Select, delete
 from sqlalchemy.exc import InterfaceError
@@ -17,6 +18,7 @@ from app.schemas.setting_schemas import (
     DailySettings,
     UserSettings,
 )
+from app.utils import db_engine
 from app.utils.utils import handling_integrity_error, handling_interface_error
 
 
@@ -47,8 +49,10 @@ async def create_new_user(session, user) -> Users:
 
 @handling_interface_error
 async def get_user(
-    session, user_login: EmailStr = None, bot_name: str = None
-) -> Users | None:
+    session,
+    user_login: EmailStr = None,
+    bot_name: str = None,
+) -> Users | InterfaceError | None:
     """
     Function. Fetches a user from the database by login or bot name.
     :param session: SQLAlchemy session.
