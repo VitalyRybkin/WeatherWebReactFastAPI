@@ -236,3 +236,4 @@ dmypy.json
 cython_debug/
 
 
+/app/utils/certs/

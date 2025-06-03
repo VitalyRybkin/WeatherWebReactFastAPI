@@ -13,7 +13,6 @@ ENV PROJECT_ENV=${PROJECT_ENV} \
   POETRY_HOME='/usr/local' \
   POETRY_VERSION=2.0.1
 
-RUN #curl -sSL https://install.python-poetry.org | python3 -
 RUN pip3 install poetry
 
 WORKDIR /code

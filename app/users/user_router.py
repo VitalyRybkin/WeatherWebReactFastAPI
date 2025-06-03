@@ -11,6 +11,7 @@ from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
+from app import utils
 from app.logger.logging_handler import basic_logger
 from app.models import Users
 from app.schemas.error_response_schemas import BadRequestMessage, ErrorMessage
@@ -23,6 +24,7 @@ from app.schemas.user_schemas import (
     UserPublic,
     UserFullInfoPublic,
     LoggedUserPublic,
+    Token,
 )
 from app.users import user_controller
 from app.users.user_controller import (
@@ -120,6 +122,13 @@ async def login(
             content={"message": "Incorrect username or password."},
         )
 
+    user_token: Token = utils.utils.encode_jwt(
+        {
+            "sub": logged_user.id,
+            "login": logged_user.login,
+        }
+    )
+
     user_settings: SettingsPublic = SettingsPublic(
         **await get_settings_dict(logged_user)
     )
@@ -143,6 +152,7 @@ async def login(
         user_settings=user_settings,
         favorite=user_favorite_location,
         wishlist=user_wishlist,
+        token=user_token,
     )
 
 

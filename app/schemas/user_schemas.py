@@ -135,6 +135,11 @@ class UserFullInfoPublic(BaseModel):
     user_settings: SettingsPublic
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
+
+
 class LoggedUserPublic(UserFullInfoPublic):
     """
     Pydentic model for user login response
@@ -150,3 +155,4 @@ class LoggedUserPublic(UserFullInfoPublic):
     # user_settings: SettingsPublic
     favorite: FavoriteLocation | Dict
     wishlist: List[FavoriteLocation] | List
+    token: Token
