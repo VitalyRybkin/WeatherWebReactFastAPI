@@ -42,6 +42,7 @@ async def create_user(
 
     return user_created
 
+
 async def user_logging(
     login: str = Form(...),
     password: str = Form(...),
