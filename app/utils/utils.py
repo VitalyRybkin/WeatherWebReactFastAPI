@@ -81,13 +81,24 @@ def handling_interface_error(func) -> Callable:
 
 def encode_jwt(
     payload: dict[str, Any],
-    private_key_path: Path = settings.jwt_authentication.public_key_path.read_text(),
+    private_key_path: Path = settings.jwt_authentication.private_key_path.read_text(),
     algorithm: str = settings.jwt_authentication.algorithm,
     expires_in: int = settings.jwt_authentication.access_token_expires_in,
     expire_in_timedelta: timedelta | None = None,
 ) -> str:
+    """
+    Function. Encode JWT
+    :param payload: payload
+    :param private_key_path: path to private key file
+    :param algorithm: encryption algorithm
+    :param expires_in: set token expiration time in minutes
+    :param expire_in_timedelta: passed token expiration time in minutes
+    :return: encoded jwt
+    """
+
     extend_payload = payload.copy()
     now = datetime.now(timezone.utc)
+
     token_expire: datetime = (
         now + expire_in_timedelta
         if expire_in_timedelta
@@ -102,7 +113,14 @@ def decode_jwt(
     token: str | bytes,
     public_key_path: Path = settings.jwt_authentication.public_key_path.read_text(),
     algorithm: str = settings.jwt_authentication.algorithm,
-):
+) -> str:
+    """
+    Function. Decode JWT
+    :param token: encoded jwt
+    :param public_key_path: path to public key file
+    :param algorithm: decryption algorithm
+    :return: decoded jwt
+    """
     return jwt.decode(
         token,
         public_key_path,

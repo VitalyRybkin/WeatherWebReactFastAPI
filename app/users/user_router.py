@@ -122,11 +122,13 @@ async def login(
             content={"message": "Incorrect username or password."},
         )
 
-    user_token: Token = utils.utils.encode_jwt(
-        {
-            "sub": logged_user.id,
-            "login": logged_user.login,
-        }
+    user_token: Token = Token(
+        access_token=utils.utils.encode_jwt(
+            {
+                "sub": logged_user.id,
+                "login": logged_user.login,
+            }
+        ),
     )
 
     user_settings: SettingsPublic = SettingsPublic(
