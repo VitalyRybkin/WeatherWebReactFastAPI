@@ -3,19 +3,14 @@ Module. Get data from DB and API and prepare it to be passed to the router.
 """
 
 import uuid
-from typing import Annotated, Any, Coroutine
 
 from fastapi import Depends, Form
-from fastapi.security import HTTPBasic
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
-from starlette.exceptions import HTTPException
 
 from app.models import Users
 from app.schemas.user_schemas import (
     UserCreate,
-    UserLogin,
     UserAccountsLink,
     UserChangePassword,
 )
@@ -46,10 +41,6 @@ async def create_user(
     user_created: Users = await create_new_user(session=session, user=new_user)
 
     return user_created
-
-
-# security = HTTPBasic()
-
 
 async def user_logging(
     login: str = Form(...),
@@ -100,7 +91,6 @@ async def linking_accounts(
     if not bot_user_info:
         return None
 
-    # if type(bot_user_info) is Users and type(web_user_info) is Users:
     if isinstance(bot_user_info, Users) and isinstance(web_user_info, Users):
         web_user_info.bot_id = bot_user_info.bot_id
         web_user_info.bot_name = bot_user_info.bot_name
@@ -127,7 +117,6 @@ async def change_password(
         session=session, user_login=user.login
     )
 
-    # if type(user_info) is Users:
     if isinstance(user_info, Users):
         if user_info.verify_password(user.password.encode()):
             user_info.password = Users.hash_password(user.new_password)

@@ -91,7 +91,6 @@ async def add_new_user_location(
             },
         )
 
-    # if user_info is IntegrityError or type(user_info) is IntegrityError:
     if isinstance(user_info, IntegrityError):
         if target == "wishlist":
             return JSONResponse(

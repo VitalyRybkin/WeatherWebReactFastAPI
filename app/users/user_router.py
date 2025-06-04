@@ -2,11 +2,10 @@
 Module. User operations (registration, login, change password etc.) API routes.
 """
 
-from typing import Any, List, Dict, Annotated
+from typing import Any, List, Dict
 
-from fastapi import APIRouter, status, Body
+from fastapi import APIRouter, status
 from fastapi.params import Depends
-from pydantic import EmailStr
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
@@ -18,7 +17,6 @@ from app.schemas.error_response_schemas import BadRequestMessage, ErrorMessage
 from app.schemas.setting_schemas import SettingsPublic, FavoriteLocation
 from app.schemas.user_schemas import (
     UserCreate,
-    UserLogin,
     UserAccountsLink,
     UserChangePassword,
     UserPublic,
@@ -62,14 +60,12 @@ async def create_user(
         await user_controller.create_user(session=session, new_user=new_user)
     )
 
-    # if type(new_user) is IntegrityError:
     if isinstance(new_user, IntegrityError):
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={"message": "User could not be created. User already exists."},
         )
 
-    # if type(new_user) is InterfaceError:
     if isinstance(new_user, InterfaceError):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -256,7 +252,6 @@ async def update_user_password(
             content={"message": "Incorrect password."},
         )
 
-    # if type(user_password_changed) is InterfaceError:
     if isinstance(user_password_changed, InterfaceError):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

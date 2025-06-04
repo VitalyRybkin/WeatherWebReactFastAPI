@@ -4,7 +4,6 @@ Module. Get data from DB and prepare it to be passed to the controller.
 
 from typing import List
 
-from fastapi import Depends
 from pydantic import EmailStr
 from sqlalchemy import insert, select, Select, delete
 from sqlalchemy.exc import InterfaceError
@@ -18,7 +17,6 @@ from app.schemas.setting_schemas import (
     DailySettings,
     UserSettings,
 )
-from app.utils import db_engine
 from app.utils.utils import handling_integrity_error, handling_interface_error
 
 
