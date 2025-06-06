@@ -24,3 +24,8 @@ scrape_configs:
 #        refresh_interval: 5s
     static_configs:
       - targets: ["fastapi-app:8000"]
+
+  - job_name: locust_scrapper
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["locust-metrics-exporter:9646"]

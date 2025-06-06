@@ -55,7 +55,6 @@ async def user_logging(
     :param session: AsyncSession
     :return:  whether a user was logged in or an error on incorrect login or password
     """
-
     user_found: Users | InterfaceError | None = await get_user(
         session=session, user_login=login
     )
