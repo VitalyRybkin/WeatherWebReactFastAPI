@@ -1,8 +1,17 @@
+"""
+Module. Configuration for locust.
+"""
+
 # from influxdb_client import InfluxDBClient
 # from influxdb_client.client.write_api import WriteOptions
 
 
 class Config:
+    """
+    Class. Configuring locust.
+
+    """
+
     conf_name: str = "Heisenbug"
     pacing_sec: float = 0.1
     api_host: str = "http://localhost:8080"
