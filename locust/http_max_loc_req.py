@@ -7,6 +7,10 @@ from config import cfg
 
 
 class APIUser(HttpUser):
+    """
+    Class. Load test for API endpoints.
+    """
+
     wait_time = constant_pacing(cfg.pacing_sec)
     host = cfg.api_host
 

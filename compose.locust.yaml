@@ -1,4 +1,3 @@
-#version: '3'
 services:
   fastapi-app:
     build:
@@ -21,18 +20,6 @@ services:
     stop_signal: SIGKILL
     networks:
       - monitor-net
-
-  loki:
-    image: grafana/loki:3.0.0
-    container_name: loki
-    ports:
-      - '3100:3100'
-    command: -config.file=/etc/loki/loki.yaml
-    volumes:
-      - ./grafana/loki_config.yaml:/etc/loki/loki.yaml
-    networks:
-      - monitor-net
-    restart: unless-stopped
 
   celery_worker:
     build:
@@ -69,7 +56,7 @@ services:
     volumes:
       - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/default.yaml
       - ./grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/main.yaml
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/locust:/var/lib/grafana/dashboards
       - grafana_data:/var/lib/grafana
     ports:
       - '3000:3000'
@@ -77,51 +64,42 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
-      - loki
-      - promtail
     networks:
       - monitor-net
 
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
+
+  locust_master:
+    image: locustio/locust
     ports:
-      - "9080:9080"
+      - "8089:8089"
+    environment:
+      - LOCUSTFILE
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./grafana/promtail_config.yaml:/etc/promtail/config.yml
-    command:
-      - -config.file=/etc/promtail/config.yml
-#    privileged: true
+      - ./locust/:/mnt/locust
+    command: -f /mnt/locust/${LOCUSTFILE}.py --master -H http://fastapi-app:8000
     networks:
       - monitor-net
 
-#  alloy:
-#    volumes:
-#      - './grafana/config.alloy:/etc/alloy/config.alloy'
-#    ports:
-#      - '12345:12345'
-#    image: 'grafana/alloy:latest'
-#    command: 'run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy'
-#    networks:
-#      - monitor-net
+  locust_worker:
+    image: locustio/locust
+    volumes:
+      - ./locust/:/mnt/locust
+    environment:
+      - LOCUSTFILE
+    command: -f /mnt/locust/${LOCUSTFILE}.py --worker --master-host locust_master
+    networks:
+      - monitor-net
 
-#  influxdb:
-#    image: influxdb:latest
-#    container_name: influxdb
-#    ports:
-#      - "8086:8086"
-#    environment:
-#      - DOCKER_INFLUXDB_INIT_MODE=setup
-#      - DOCKER_INFLUXDB_INIT_USERNAME=username
-#      - DOCKER_INFLUXDB_INIT_PASSWORD=password
-#      - DOCKER_INFLUXDB_INIT_ORG=demo_org
-#      - DOCKER_INFLUXDB_INIT_BUCKET=demo_bucket
-#      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=demo_token
-#    networks:
-#      - monitor-net
-#    restart: unless-stopped
+  locust-metrics-exporter:
+    image: containersol/locust_exporter
+    ports:
+      - "9646:9646"
+    environment:
+      - LOCUST_EXPORTER_URI=http://locust_master:8089
+    depends_on:
+      - locust_master
+    networks:
+      - monitor-net
 
 networks:
   monitor-net:

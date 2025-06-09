@@ -11,13 +11,18 @@ class DBUser(HttpUser):
 
     @task
     def login_user(self):
-        body: dict[str, Any] = {
-            "user_login": f"{cfg.user_login}",
-            "user_password": f"{cfg.user_password}",
+        form: dict[str, Any] = {
+            "login": f"{cfg.user_login}",
+            "password": f"{cfg.user_password}",
+        }
+        headers: dict[str, Any] = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
         }
         with self.client.post(
-            f"/users/login/",
-            json=body,
+            url="/users/login/",
+            data=form,
+            headers=headers,
             catch_response=True,
             name=self.login_user.__name__,
         ) as request:
