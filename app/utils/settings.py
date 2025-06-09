@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     #     env_file = ".env"
 
     db_echo: bool = True
+    pool_size = 5
+    max_overflow = 10
 
     jwt_authentication: AuthSettings = AuthSettings()
 

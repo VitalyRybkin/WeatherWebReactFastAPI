@@ -26,8 +26,8 @@ class DatabaseEngine:
         self.engine = create_async_engine(
             url=settings.db_conn,
             echo=settings.db_echo,
-            pool_size=5,
-            max_overflow=10,
+            pool_size=settings.pool_size,
+            max_overflow=settings.max_overflow,
         )
         self.session = async_sessionmaker(
             bind=self.engine,
@@ -45,6 +45,9 @@ class DatabaseEngine:
             session_factory=self.session,
             scopefunc=current_task,
         )
+
+    async def dispose(self) -> None:
+        await self.engine.dispose()
 
     async def session_dependency(
         self,
