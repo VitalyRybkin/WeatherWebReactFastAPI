@@ -6,6 +6,7 @@ __all__ = (
     "Favorites",
     "Daily",
     "Hourly",
+    "AbstractBaseModel",
 )
 
 from .users import Users
@@ -16,3 +17,4 @@ from .current import Current
 from .favorites import Favorites
 from .daily import Daily
 from .hourly import Hourly
+from .base import AbstractBaseModel

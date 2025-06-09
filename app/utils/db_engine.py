@@ -25,9 +25,9 @@ class DatabaseEngine:
     def __init__(self):
         self.engine = create_async_engine(
             url=settings.db_conn,
-            echo=settings.db_echo,
-            pool_size=settings.pool_size,
-            max_overflow=settings.max_overflow,
+            echo=settings.db_settings.db_echo,
+            pool_size=settings.db_settings.pool_size,
+            max_overflow=settings.db_settings.max_overflow,
         )
         self.session = async_sessionmaker(
             bind=self.engine,

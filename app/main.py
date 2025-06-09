@@ -24,8 +24,8 @@ async def lifespan(app: FastAPI):  # pylint: disable=W0613, W0621
     :param app: FastAPI
     :return: None
     """
-    async with db_engine.engine.begin() as conn:
-        await conn.run_sync(AbstractBaseModel.metadata.create_all)
+    # async with db_engine.engine.begin() as conn:
+    #     await conn.run_sync(AbstractBaseModel.metadata.drop_all)
     yield
     db_engine.dispose()
 
