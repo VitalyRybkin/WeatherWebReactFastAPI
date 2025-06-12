@@ -119,7 +119,7 @@ async def login(
         )
 
     user_token: Token = Token(
-        access_token=utils.utils.encode_jwt(
+        access_token=utils.auth.encode_jwt(
             {
                 "sub": logged_user.id,
                 "login": logged_user.login,

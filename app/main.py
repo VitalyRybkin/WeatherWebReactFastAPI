@@ -14,6 +14,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api_v1.views import location_router
 from app.users.settings_router import settings_router
 from app.users.user_router import user_router
+from app.utils.auth import JWTAuthentication
 from app.utils.db_engine import db_engine
 
 
@@ -46,6 +47,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.add_middleware(JWTAuthentication(app))
 
 
 @app.get("/", tags=["root"])
