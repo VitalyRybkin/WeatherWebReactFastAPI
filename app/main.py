@@ -5,7 +5,7 @@ Main app module - start FastAPI app.
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.responses import ORJSONResponse
 from prometheus_client import make_asgi_app
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -14,7 +14,8 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api_v1.views import location_router
 from app.users.settings_router import settings_router
 from app.users.user_router import user_router
-from app.utils.auth import JWTAuthentication
+from app.utils.auth import user_auth
+
 from app.utils.db_engine import db_engine
 
 
@@ -33,8 +34,12 @@ async def lifespan(app: FastAPI):  # pylint: disable=W0613, W0621
 
 app = FastAPI(lifespan=lifespan, root_path="/app", response_class=ORJSONResponse)
 app.include_router(user_router, tags=["users"])
-app.include_router(settings_router, tags=["settings"])
-app.include_router(location_router, tags=["locations"])
+app.include_router(
+    settings_router, tags=["settings"], dependencies=[Depends(user_auth)]
+)
+app.include_router(
+    location_router, tags=["locations"], dependencies=[Depends(user_auth)]
+)
 
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
@@ -47,9 +52,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-app.add_middleware(JWTAuthentication(app))
 
 
 @app.get("/", tags=["root"])

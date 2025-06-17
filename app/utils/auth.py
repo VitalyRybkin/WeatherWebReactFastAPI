@@ -1,20 +1,22 @@
 from datetime import timedelta, datetime, timezone
-from pathlib import Path
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 import jwt
-from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from requests import Response, Request
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
+from fastapi import Depends, HTTPException
+from fastapi.security import (
+    HTTPBearer,
+    HTTPAuthorizationCredentials,
+)
+from starlette.responses import JSONResponse
 
 from .settings import settings
+
+http_bearer: HTTPBearer = HTTPBearer()
 
 
 def encode_jwt(
     payload: dict[str, Any],
-    private_key_path: Path = settings.jwt_authentication.private_key_path.read_text(),
+    private_key_path: str = settings.jwt_authentication.private_key_path.read_text(),
     algorithm: str = settings.jwt_authentication.algorithm,
     expires_in: int = settings.jwt_authentication.access_token_expires_in,
     expire_in_timedelta: timedelta | None = None,
@@ -44,9 +46,9 @@ def encode_jwt(
 
 def decode_jwt(
     token: str | bytes,
-    public_key_path: Path = settings.jwt_authentication.public_key_path.read_text(),
+    public_key_path: str = settings.jwt_authentication.public_key_path.read_text(),
     algorithm: str = settings.jwt_authentication.algorithm,
-) -> str:
+):
     """
     Function. Decode JWT
     :param token: encoded jwt
@@ -61,16 +63,17 @@ def decode_jwt(
     )
 
 
-class JWTAuthentication(BaseHTTPMiddleware):
-    def __init__(self, app: ASGIApp):
-        super().__init__(app)
-        self.credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())
-
-    async def dispatch(self, request: Request, call_next: Callable) -> str | Any:
-        try:
-            decode_jwt(token=self.credentials.credentials)
-            return await call_next(request)
-        except jwt.exceptions.ExpiredSignatureError:
-            return await call_next(request)
-        except jwt.exceptions.InvalidTokenError:
-            return await call_next(request)
+async def user_auth(
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
+):
+    try:
+        if credentials.scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=401, detail="Invalid authorization scheme"
+            )
+        decode_jwt(token=credentials.credentials)
+        return None
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
