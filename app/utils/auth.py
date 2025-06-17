@@ -68,9 +68,7 @@ async def user_auth(
 ):
     try:
         if credentials.scheme.lower() != "bearer":
-            raise HTTPException(
-                status_code=401, detail="Invalid authorization scheme"
-            )
+            raise HTTPException(status_code=401, detail="Invalid authorization scheme")
         decode_jwt(token=credentials.credentials)
         return None
     except jwt.ExpiredSignatureError:
