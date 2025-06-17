@@ -28,7 +28,7 @@ prometheus-client = "^0.21.1"
 prometheus-fastapi-instrumentator = "^7.1.0"
 pylint = "^3.3.7"
 python-multipart = "^0.0.20"
-pyjwt = {extras = ["crypto"], version = "^2.10.1"}
+pyjwt = {extras = ["crypto"], version = "<2.10"}
 locust = "^2.37.10"
 
 [build-system]

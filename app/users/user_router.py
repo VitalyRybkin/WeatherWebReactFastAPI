@@ -6,6 +6,7 @@ from typing import Any, List, Dict
 
 from fastapi import APIRouter, status
 from fastapi.params import Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
@@ -22,7 +23,7 @@ from app.schemas.user_schemas import (
     UserPublic,
     UserFullInfoPublic,
     LoggedUserPublic,
-    Token,
+    TokenInfo,
 )
 from app.users import user_controller
 from app.users.user_controller import (
@@ -31,6 +32,7 @@ from app.users.user_controller import (
     change_password,
 )
 from app.utils import to_json
+from app.utils.auth import user_auth
 from app.utils.db_engine import db_engine
 
 user_router = APIRouter(prefix="/users", tags=["users"])
@@ -96,13 +98,16 @@ async def create_user(
     },
 )
 async def login(
-    logged_user: Users | None | type[InterfaceError] = Depends(user_logging),
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse | LoggedUserPublic:
     """
     Function. Logs a user in.
-    :param logged_user:
     :return: Whether the user was successfully logged in or not (HTTP error)
     """
+    logged_user: Users | None | type[InterfaceError] = await user_logging(
+        form_data.username, form_data.password, session
+    )
 
     if type(logged_user) is InterfaceError:
         return JSONResponse(
@@ -116,10 +121,11 @@ async def login(
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"message": "Incorrect username or password."},
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_token: Token = Token(
-        access_token=utils.utils.encode_jwt(
+    user_token: TokenInfo = TokenInfo(
+        access_token=utils.auth.encode_jwt(
             {
                 "sub": logged_user.id,
                 "login": logged_user.login,
@@ -177,6 +183,7 @@ async def get_settings_dict(logged_user) -> dict[str, Any]:
 @user_router.patch(
     "/link/",
     summary="Link web and telegram accounts",
+    dependencies=[Depends(user_auth)],
     responses={
         status.HTTP_200_OK: {"model": ErrorMessage},
         status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
@@ -224,6 +231,7 @@ async def link_account(
 @user_router.put(
     "/change_password/",
     summary="Change user password",
+    dependencies=[Depends(user_auth)],
     responses={
         status.HTTP_200_OK: {"model": ErrorMessage},
         status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},

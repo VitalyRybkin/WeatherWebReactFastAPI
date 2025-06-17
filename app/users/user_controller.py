@@ -5,6 +5,7 @@ Module. Get data from DB and API and prepare it to be passed to the router.
 import uuid
 
 from fastapi import Depends, Form
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import InterfaceError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -44,14 +45,14 @@ async def create_user(
 
 
 async def user_logging(
-    login: str = Form(...),
-    password: str = Form(...),
-    session: AsyncSession = Depends(db_engine.session_dependency),
+    login: str,
+    password: str,
+    session: AsyncSession,
 ) -> Users | None | type[InterfaceError]:
     """
     Function. Handling user logging in.
-    :param password: user password
     :param login: user login
+    :param password: user password
     :param session: AsyncSession
     :return:  whether a user was logged in or an error on incorrect login or password
     """
@@ -62,6 +63,7 @@ async def user_logging(
     if (
         user_found
         and type(user_found) is Users
+        # and user_found.verify_password(password.encode())
         and user_found.verify_password(password.encode())
     ):
         return user_found

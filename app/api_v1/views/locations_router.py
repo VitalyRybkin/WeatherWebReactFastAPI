@@ -6,8 +6,6 @@ from typing import Any, List
 
 from fastapi import APIRouter
 
-from app.schemas.weather_schemas import ForecastPublic
-
 from app.schemas.setting_schemas import (
     UserSettings,
     CurrentSettings,
@@ -15,6 +13,7 @@ from app.schemas.setting_schemas import (
     DailySettings,
     LocationPublic,
 )
+from app.schemas.weather_schemas import ForecastPublic
 from .location_controller import get_locations, get_location_weather
 
 location_router = APIRouter(prefix="/api_v1")
