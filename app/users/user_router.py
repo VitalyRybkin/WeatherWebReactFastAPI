@@ -14,7 +14,13 @@ from starlette.responses import JSONResponse
 from app import utils
 from app.logger.logging_handler import basic_logger
 from app.models import Users
-from app.schemas.error_response_schemas import BadRequestMessage, ErrorMessage
+from app.schemas.error_response_schemas import (
+    DBErrorMessage,
+    ConflictErrorMessage,
+    UnauthorizedErrorMessage,
+    NotFoundErrorMessage,
+    Ok,
+)
 from app.schemas.setting_schemas import SettingsPublic, FavoriteLocation
 from app.schemas.user_schemas import (
     UserCreate,
@@ -34,6 +40,12 @@ from app.users.user_controller import (
 from app.utils import to_json
 from app.utils.auth import user_auth
 from app.utils.db_engine import db_engine
+from app.utils.exeption_handler import (
+    DatabaseInterfaceError,
+    UnauthorizedError,
+    DatabaseIntegrityError,
+    NotFoundError,
+)
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -43,9 +55,14 @@ user_router = APIRouter(prefix="/users", tags=["users"])
     summary="Register a new user",
     response_model=UserFullInfoPublic,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
-        status.HTTP_409_CONFLICT: {"model": ErrorMessage},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
+        status.HTTP_409_CONFLICT: {
+            "model": ConflictErrorMessage,
+            "description": "User already exists.",
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": DBErrorMessage,
+            "description": "Database connection error.",
+        },
     },
 )
 async def create_user(
@@ -63,18 +80,10 @@ async def create_user(
     )
 
     if isinstance(new_user, IntegrityError):
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={"message": "User could not be created. User already exists."},
-        )
+        raise DatabaseIntegrityError("User already exists.")
 
     if isinstance(new_user, InterfaceError):
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Database connection error. User could not be created."
-            },
-        )
+        raise DatabaseInterfaceError("User could not be created.")
 
     user_settings = await get_settings_dict(new_user)
     user_settings_response: SettingsPublic = SettingsPublic(**user_settings)
@@ -92,9 +101,14 @@ async def create_user(
     summary="User login with e-mail and password",
     response_model=LoggedUserPublic,
     responses={
-        status.HTTP_400_BAD_REQUEST: {"model": ErrorMessage},
-        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessage},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": BadRequestMessage},
+        status.HTTP_401_UNAUTHORIZED: {
+            "model": UnauthorizedErrorMessage,
+            "description": "Incorrect username or password.",
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": DBErrorMessage,
+            "description": "Database connection error.",
+        },
     },
 )
 async def login(
@@ -109,20 +123,11 @@ async def login(
         form_data.username, form_data.password, session
     )
 
-    if type(logged_user) is InterfaceError:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "message": "Database connection error. User could not be logged in."
-            },
-        )
+    if isinstance(logged_user, InterfaceError):
+        raise DatabaseInterfaceError("User could not be logged in.")
 
     if not logged_user:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"message": "Incorrect username or password."},
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise UnauthorizedError("Incorrect username or password.")
 
     user_token: TokenInfo = TokenInfo(
         access_token=utils.auth.encode_jwt(
@@ -184,17 +189,23 @@ async def get_settings_dict(logged_user) -> dict[str, Any]:
     "/link/",
     summary="Link web and telegram accounts",
     dependencies=[Depends(user_auth)],
+    response_model=Ok,
     responses={
-        status.HTTP_200_OK: {"model": ErrorMessage},
-        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
-        status.HTTP_404_NOT_FOUND: {"model": ErrorMessage},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
+        # status.HTTP_200_OK: {"model": Success, "description": "Accounts linked."},
+        status.HTTP_404_NOT_FOUND: {
+            "model": NotFoundErrorMessage,
+            "description": "Record not found error.",
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": DBErrorMessage,
+            "description": "Database connection error.",
+        },
     },
 )
 async def link_account(
     user_link_info: UserAccountsLink,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> JSONResponse:
+) -> Ok:
     """
     Function. Links web and telegram accounts.
     :param user_link_info: login (an email address) and bot_name
@@ -209,41 +220,39 @@ async def link_account(
     )
 
     if account_linked is InterfaceError:
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Database connection error. Accounts could not be linked."
-            },
-        )
+        raise DatabaseInterfaceError("Accounts could not be linked.")
 
     if account_linked is None:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": "Account could not be linked. Bot user not found."},
+        raise NotFoundError(
+            "Bot user not found.",
+            {"X-Error-Code": "USER_NOT_FOUND"},
         )
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"success": True, "detail": "Accounts linked."},
-    )
+    return Ok(success=True, message="Accounts linked.")
 
 
 @user_router.put(
     "/change_password/",
     summary="Change user password",
     dependencies=[Depends(user_auth)],
+    response_model=Ok,
     responses={
-        status.HTTP_200_OK: {"model": ErrorMessage},
-        status.HTTP_400_BAD_REQUEST: {"model": BadRequestMessage},
-        status.HTTP_401_UNAUTHORIZED: {"model": ErrorMessage},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": ErrorMessage},
+        # status.HTTP_200_OK: {"model": Success, "description": "APassword changed."},
+        status.HTTP_401_UNAUTHORIZED: {
+            "model": DBErrorMessage,
+            "description": "Incorrect password.",
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": DBErrorMessage,
+            "description": "Database connection error.",
+        },
     },
     description="Changes user password with login, password, new password",
 )
 async def update_user_password(
     user: UserChangePassword,
     session: AsyncSession = Depends(db_engine.session_dependency),
-) -> JSONResponse:
+) -> Ok:
     """
     Function. Changes user password.
     :param user: login, password, new password
@@ -255,22 +264,9 @@ async def update_user_password(
     )
 
     if user_password_changed is None:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"message": "Incorrect password."},
-        )
+        raise UnauthorizedError("Incorrect password.")
 
     if isinstance(user_password_changed, InterfaceError):
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Database connection error. Accounts could not be linked."
-            },
-        )
+        raise DatabaseInterfaceError(message="Accounts could not be linked.")
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={
-            "message": "User password has changed.",
-        },
-    )
+    return Ok(success=True, message="Password changed.")

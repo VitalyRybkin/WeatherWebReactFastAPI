@@ -13,7 +13,13 @@ from starlette.responses import JSONResponse
 
 from app.models import Users, Current, Hourly, Daily, Settings
 from app.models.tables import Tables
-from app.schemas.error_response_schemas import ErrorMessage, BadRequestMessage
+from app.schemas.error_response_schemas import (
+    DBErrorMessage,
+    BadRequestMessage,
+    ConflictErrorMessage,
+    NotFoundErrorMessage,
+    UnprocessableErrorMessage,
+)
 from app.schemas.setting_schemas import (
     FavoriteLocation,
     UserSettings,
@@ -30,6 +36,12 @@ from app.users.settings_controller import (
     update_user_settings,
 )
 from app.utils import db_engine, to_json
+from app.utils.exeption_handler import (
+    DatabaseInterfaceError,
+    DatabaseIntegrityError,
+    NotFoundError,
+    UnprocessableEntityError,
+)
 
 settings_router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -40,19 +52,16 @@ settings_router = APIRouter(prefix="/settings", tags=["settings"])
     response_model=Union[List[LocationPublic], LocationPublic],
     responses={
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": ErrorMessage,
-            "description": "Database connection error",
+            "model": DBErrorMessage,
+            "description": "Database connection error.",
         },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
-            "model": ErrorMessage,
-            "description": "Wrong target request",
+            "model": UnprocessableErrorMessage,
+            "description": "Wrong target request.",
         },
         status.HTTP_409_CONFLICT: {
-            "model": ErrorMessage,
-            "description": "Location already exists",
-        },
-        status.HTTP_400_BAD_REQUEST: {
-            "model": BadRequestMessage,
+            "model": ConflictErrorMessage,
+            "description": "Location exists.",
         },
     },
 )
@@ -71,9 +80,8 @@ async def add_new_user_location(
     :return: added location info or an HTTP error
     """
     if target not in ["favorite", "wishlist"]:
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={"message": "Target parameter must be 'favorite' or 'wishlist'"},
+        raise UnprocessableEntityError(
+            "Target parameter must be 'favorite' or 'wishlist'"
         )
 
     user_info: Users | InterfaceError | IntegrityError = await add_new_location(
@@ -84,26 +92,18 @@ async def add_new_user_location(
     )
 
     if user_info is InterfaceError:
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Database connection error. User location could not be added or changed."
-            },
+        raise DatabaseInterfaceError(
+            message="User location could not be added or changed."
         )
 
     if isinstance(user_info, IntegrityError):
-        if target == "wishlist":
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={
-                    "message": "Error on adding location!. Location already exists."
-                },
-            )
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={
-                "message": "Location could not be added. User already has favorite location set."
-            },
+        raise DatabaseIntegrityError(
+            (
+                "Location already exists."
+                if target == "wishlist"
+                else "User location already set."
+            ),
+            {"X-Error-Code": "LOCATION_EXISTS"},
         )
 
     if target == "wishlist" and user_info.wishlist:
@@ -118,11 +118,8 @@ async def add_new_user_location(
     summary="Change user favorite location",
     response_model=LocationPublic,
     responses={
-        status.HTTP_400_BAD_REQUEST: {
-            "model": BadRequestMessage,
-        },
         status.HTTP_404_NOT_FOUND: {
-            "model": ErrorMessage,
+            "model": NotFoundErrorMessage,
             "description": "User not found.",
         },
     },
@@ -144,17 +141,11 @@ async def change_user_location(
     )
 
     if user_info is None:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": "User not found."},
-        )
+        raise NotFoundError("User not found.", {"X-Error-Code": "USER_NOT_FOUND"})
 
     if user_info is InterfaceError:
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Database connection error. User favorite location could not be changed."
-            },
+        raise DatabaseInterfaceError(
+            message="User favorite location could not be changed."
         )
 
     return LocationPublic(**to_json(user_info.favorites))
@@ -165,15 +156,12 @@ async def change_user_location(
     summary="Remove user location from wishlist",
     response_model=List[LocationPublic],
     responses={
-        status.HTTP_400_BAD_REQUEST: {
-            "model": BadRequestMessage,
-        },
         status.HTTP_404_NOT_FOUND: {
-            "model": ErrorMessage,
+            "model": NotFoundErrorMessage,
             "description": "User not found.",
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": ErrorMessage,
+            "model": DBErrorMessage,
             "description": "Database connection error.",
         },
     },
@@ -195,18 +183,10 @@ async def remove_user_location(
     )
 
     if user_locations is None:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": "User not found."},
-        )
+        raise NotFoundError("User not found.", {"X-Error-Code": "USER_NOT_FOUND"})
 
     if user_locations is InterfaceError:
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Database connection error. User location cannot be removed."
-            },
-        )
+        raise DatabaseInterfaceError(message="User location cannot be removed.")
 
     return [LocationPublic(**to_json(location)) for location in user_locations.wishlist]
 
@@ -216,15 +196,12 @@ async def remove_user_location(
     summary="Update user weather settings",
     response_model=SettingsPublic,
     responses={
-        status.HTTP_400_BAD_REQUEST: {
-            "model": BadRequestMessage,
-        },
         status.HTTP_404_NOT_FOUND: {
-            "model": ErrorMessage,
+            "model": NotFoundErrorMessage,
             "description": "User not found.",
         },
         status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": ErrorMessage,
+            "model": DBErrorMessage,
             "description": "Database connection error.",
         },
     },
@@ -256,18 +233,12 @@ async def update_user_weather_settings(
     )
 
     if settings_updated is InterfaceError:
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "message": "Database connection error. User settings cannot be updated."
-            },
+        raise DatabaseInterfaceError(
+            message="Database connection error. User settings cannot be updated."
         )
 
     if settings_updated is None:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={"message": "User not found."},
-        )
+        raise NotFoundError("User not found.")
 
     user_settings: dict = {}
     for setting in settings_updated:

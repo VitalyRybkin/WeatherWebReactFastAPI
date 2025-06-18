@@ -3,13 +3,15 @@ Main app module - start FastAPI app.
 """
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 import uvicorn
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import ORJSONResponse
 from prometheus_client import make_asgi_app
 from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 
 from app.api_v1.views import location_router
 from app.users.settings_router import settings_router
@@ -29,7 +31,7 @@ async def lifespan(app: FastAPI):  # pylint: disable=W0613, W0621
     # async with db_engine.engine.begin() as conn:
     #     await conn.run_sync(AbstractBaseModel.metadata.drop_all)
     yield
-    db_engine.dispose()
+    await db_engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan, root_path="/app", response_class=ORJSONResponse)
@@ -52,6 +54,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(HTTPException)
+async def enhanced_error_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            # "error_code": exc.headers.get("X-Error-Code") if exc.headers else None,
+            "headers": exc.headers,
+            # "path": request.url.path,
+        },
+    )
 
 
 @app.get("/", tags=["root"])

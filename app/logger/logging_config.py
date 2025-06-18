@@ -4,13 +4,14 @@ Module. Logger configuration.
 
 import logging
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Dict, Any
 
 
-@dataclass
-class Loggers:
-    basic: str = "BASIC_LOGGER"
-    database_err: str = "DATABASE_LOGGER"
+# @dataclass
+class Loggers(StrEnum):
+    basic = "BASIC_LOGGER"
+    database_err = "DATABASE_LOGGER"
 
 
 class LevelFileHandler(logging.Handler):
