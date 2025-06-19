@@ -8,9 +8,13 @@ from enum import StrEnum
 from typing import Dict, Any
 
 
-# @dataclass
 class Loggers(StrEnum):
     basic = "BASIC_LOGGER"
+    database_err = "DATABASE_LOGGER"
+
+
+class Handlers(StrEnum):
+    stdout = "std_out"
     database_err = "DATABASE_LOGGER"
 
 
@@ -20,7 +24,7 @@ class LevelFileHandler(logging.Handler):
         self.mode = mode
 
     def emit(self, record):
-        with open(f"DB_{record.levelname}.log", self.mode) as f:
+        with open(f"db_{record.levelname}.log", self.mode) as f:
             msg = self.format(record)
             f.write(msg + "\n")
 
@@ -46,19 +50,20 @@ def get_logging_config() -> Dict[str, Any]:
                 "stream": "ext://sys.stdout",
                 "formatter": "default",
             },
-            "db_err_file": {
-                "()": LevelFileHandler,
-                "formatter": "default",
-                "mode": "a",
-            },
-            "time_rotating": {
-                "class": "logging.handlers.TimedRotatingFileHandler",
+            # "db_err_file": {
+            #     "()": LevelFileHandler,
+            #     "formatter": "default",
+            #     "mode": "a",
+            # },
+            "file_rotating": {
+                "class": "logging.handlers.RotatingFileHandler",
                 "backupCount": 5,
                 "formatter": "default",
-                "filename": "db_err.log",
-                "when": "D",
-                "interval": 1,
+                "filename": "logs/db_err_file.log",
+                # "when": "D",
+                # "interval": 1,
                 "delay": True,
+                "maxBytes": 1048576,
             },
         },
         "loggers": {
@@ -67,14 +72,14 @@ def get_logging_config() -> Dict[str, Any]:
                 "level": "INFO",
             },
             f"{Loggers.database_err}": {
-                "handlers": ["db_err_file"],
+                "handlers": ["file_rotating"],
                 "level": "ERROR",
             },
-            f"{Loggers.database_err}.utils": {
-                "handlers": ["time_rotating"],
-                "level": "ERROR",
-                "propagate": False,
-            },
+            # f"{Loggers.database_err}.utils": {
+            #     "handlers": ["time_rotating"],
+            #     "level": "ERROR",
+            #     "propagate": False,
+            # },
         },
     }
     return dict_config

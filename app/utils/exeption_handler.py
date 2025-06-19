@@ -32,4 +32,4 @@ class UnprocessableEntityError(HTTPException):
 class DatabaseInterfaceError(HTTPException):
     def __init__(self, message: str):
         super().__init__(500, f"Database connection error. {message}")
-        database_logger.exception(self, f"Database connection error.")
+        database_logger.exception("Database connection error.")
