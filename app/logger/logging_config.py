@@ -3,19 +3,9 @@ Module. Logger configuration.
 """
 
 import logging
-from dataclasses import dataclass
-from enum import StrEnum
 from typing import Dict, Any
 
-
-class Loggers(StrEnum):
-    basic = "BASIC_LOGGER"
-    database_err = "DATABASE_LOGGER"
-
-
-class Handlers(StrEnum):
-    stdout = "std_out"
-    database_err = "DATABASE_LOGGER"
+from app.utils.settings import settings
 
 
 class LevelFileHandler(logging.Handler):
@@ -37,28 +27,17 @@ def get_logging_config() -> Dict[str, Any]:
     dict_config: dict = {
         "version": 1,
         "disable_existing_loggers": False,
-        "formatters": {
-            "default": {
-                "format": f"{'[%(levelname)s]':<10} %(asctime)s | %(name)s - %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
-            },
-        },
+        "formatters": {},
         "filters": {},
         "handlers": {
-            "stdout": {
+            settings.handlers.STDOUT_HANDLER: {
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",
-                "formatter": "default",
             },
-            # "db_err_file": {
-            #     "()": LevelFileHandler,
-            #     "formatter": "default",
-            #     "mode": "a",
-            # },
-            "file_rotating": {
+            settings.handlers.DB_HANDLER: {
                 "class": "logging.handlers.RotatingFileHandler",
                 "backupCount": 5,
-                "formatter": "default",
+                # "formatter": "default",
                 "filename": "logs/db_err_file.log",
                 # "when": "D",
                 # "interval": 1,
@@ -67,19 +46,18 @@ def get_logging_config() -> Dict[str, Any]:
             },
         },
         "loggers": {
-            f"{Loggers.basic}": {
-                "handlers": ["stdout"],
+            settings.loggers.DEBUG_LOGGER: {
+                "handlers": [
+                    settings.handlers.STDOUT_HANDLER,
+                ],
                 "level": "INFO",
             },
-            f"{Loggers.database_err}": {
-                "handlers": ["file_rotating"],
+            settings.loggers.DB_LOGGER: {
+                "handlers": [
+                    settings.handlers.DB_HANDLER,
+                ],
                 "level": "ERROR",
             },
-            # f"{Loggers.database_err}.utils": {
-            #     "handlers": ["time_rotating"],
-            #     "level": "ERROR",
-            #     "propagate": False,
-            # },
         },
     }
     return dict_config

@@ -10,6 +10,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = Path(__file__).parent
 
 
+class Loggers(BaseSettings):
+    DEBUG_LOGGER: str = "DEBUG_LOGGER"
+    DB_LOGGER: str = "DB_LOGGER"
+
+
+class Handlers(BaseSettings):
+    DB_HANDLER: str = "DB_HANDLER"
+    STDOUT_HANDLER: str = "STDOUT_HANDLER"
+
+
 class DBSettings(BaseModel):
     """
     Class. Database settings.
@@ -50,11 +60,11 @@ class Settings(BaseSettings):
     DB_HOST: str
     API_TOKEN: str
 
-    # class Config:
-    #     env_file = ".env"
-
     jwt_authentication: AuthSettings = AuthSettings()
     db_settings: DBSettings = DBSettings()
+
+    loggers: Loggers = Loggers()
+    handlers: Handlers = Handlers()
 
     @property
     def db_conn(self) -> str:
