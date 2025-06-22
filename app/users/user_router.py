@@ -4,7 +4,7 @@ Module. User operations (registration, login, change password etc.) API routes.
 
 from typing import Any, List, Dict
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Response
 from fastapi.params import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.exc import InterfaceError, IntegrityError
@@ -112,6 +112,7 @@ async def create_user(
     },
 )
 async def login(
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(db_engine.session_dependency),
 ) -> JSONResponse | LoggedUserPublic:
@@ -136,6 +137,10 @@ async def login(
                 "login": logged_user.login,
             }
         ),
+    )
+
+    response.headers["Authorization"] = (
+        f"{user_token.token_type} {user_token.access_token}"
     )
 
     user_settings: SettingsPublic = SettingsPublic(

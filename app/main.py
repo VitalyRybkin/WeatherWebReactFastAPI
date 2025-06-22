@@ -39,9 +39,7 @@ app.include_router(user_router, tags=["users"])
 app.include_router(
     settings_router, tags=["settings"], dependencies=[Depends(user_auth)]
 )
-app.include_router(
-    location_router, tags=["locations"], dependencies=[Depends(user_auth)]
-)
+app.include_router(location_router, tags=["locations"])
 
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
