@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime, timezone
-from typing import Any
+from typing import Any, Optional
 
 import jwt
 from fastapi import Depends, HTTPException, Request, Response
@@ -8,12 +8,28 @@ from fastapi.security import (
     HTTPAuthorizationCredentials,
 )
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.status import HTTP_403_FORBIDDEN
 from starlette.types import ASGIApp
 
 from .settings import settings
 from ..schemas.user_schemas import TokenInfo
 
-http_bearer: HTTPBearer = HTTPBearer()
+class Bearer(HTTPBearer):
+    def __init__(self, auto_error: bool = True):
+        super().__init__(auto_error=auto_error)
+
+    async def __call__(
+        self, request: Request
+    ) -> Optional[HTTPAuthorizationCredentials]:
+
+        if (
+            request.url.path
+            == f"/app/api_v1/id/{request.path_params.get('location_id')}/"
+        ):
+            self.auto_error = False
+        await super().__call__(request)
+
+http_bearer: HTTPBearer = Bearer()
 
 
 def encode_jwt(
@@ -68,15 +84,19 @@ def decode_jwt(
 async def user_auth(
     credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
 ):
-    try:
-        if credentials.scheme.lower() != "bearer":
-            raise HTTPException(status_code=401, detail="Invalid authorization scheme")
-        payload = decode_jwt(token=credentials.credentials)
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    if credentials:
+        try:
+            if credentials.scheme.lower() != "bearer":
+                raise HTTPException(
+                    status_code=401, detail="Invalid authorization scheme"
+                )
+            payload = decode_jwt(token=credentials.credentials)
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token has expired")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    return None
 
 
 class AuthResponseMiddleware(BaseHTTPMiddleware):

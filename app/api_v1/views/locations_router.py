@@ -5,6 +5,7 @@ Module. Location API routes.
 from typing import Any, List
 
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPBasic
 
 from app.schemas.setting_schemas import (
     UserSettings,
@@ -18,6 +19,7 @@ from .location_controller import get_locations, get_location_weather
 from ...utils.auth import user_auth
 
 location_router = APIRouter(prefix="/api_v1")
+security: HTTPBasic = HTTPBasic(auto_error=False)
 
 
 @location_router.get(

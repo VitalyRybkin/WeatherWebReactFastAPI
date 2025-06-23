@@ -166,7 +166,7 @@ async def login(
         user_settings=user_settings,
         favorite=user_favorite_location,
         wishlist=user_wishlist,
-        token=user_token,
+        # token=user_token,
     )
 
 

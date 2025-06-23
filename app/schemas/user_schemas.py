@@ -155,4 +155,4 @@ class LoggedUserPublic(UserFullInfoPublic):
     # user_settings: SettingsPublic
     favorite: FavoriteLocation | Dict
     wishlist: List[FavoriteLocation] | List
-    token: TokenInfo
+    # token: TokenInfo
