@@ -4,7 +4,7 @@ Module. Location API routes.
 
 from typing import Any, List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.schemas.setting_schemas import (
     UserSettings,
@@ -15,12 +15,13 @@ from app.schemas.setting_schemas import (
 )
 from app.schemas.weather_schemas import ForecastPublic
 from .location_controller import get_locations, get_location_weather
+from ...utils.auth import user_auth
 
 location_router = APIRouter(prefix="/api_v1")
 
 
 @location_router.get(
-    "/{location_name}/",
+    "/name/{location_name}/",
     summary="Get location / list of locations by name.",
     response_model=List[LocationPublic],
 )
@@ -36,8 +37,9 @@ def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
 
 
 @location_router.post(
-    "/{location_id}/",
+    "/id/{location_id}/",
     summary="Get location by ID.",
+    dependencies=[Depends(user_auth)],
     response_model=ForecastPublic,
     response_model_exclude_none=True,
 )

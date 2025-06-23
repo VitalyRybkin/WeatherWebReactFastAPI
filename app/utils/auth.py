@@ -2,14 +2,16 @@ from datetime import timedelta, datetime, timezone
 from typing import Any
 
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request, Response
 from fastapi.security import (
     HTTPBearer,
     HTTPAuthorizationCredentials,
 )
-from starlette.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 
 from .settings import settings
+from ..schemas.user_schemas import TokenInfo
 
 http_bearer: HTTPBearer = HTTPBearer()
 
@@ -69,9 +71,36 @@ async def user_auth(
     try:
         if credentials.scheme.lower() != "bearer":
             raise HTTPException(status_code=401, detail="Invalid authorization scheme")
-        decode_jwt(token=credentials.credentials)
-        return None
+        payload = decode_jwt(token=credentials.credentials)
+        return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+class AuthResponseMiddleware(BaseHTTPMiddleware):
+
+    def __init__(self, app: ASGIApp):
+        super().__init__(app)
+
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        auth_header = request.headers.get("Authorization")
+
+        if auth_header:
+            token: str = auth_header.split("Bearer ")[1]
+            payload = decode_jwt(token=token)
+            user_token: TokenInfo = TokenInfo(
+                access_token=encode_jwt(
+                    {
+                        "sub": payload["sub"],
+                        "login": payload["login"],
+                    }
+                ),
+            )
+            response.headers["Authorization"] = (
+                f"{user_token.token_type} {user_token.access_token}"
+            )
+
+        return response
