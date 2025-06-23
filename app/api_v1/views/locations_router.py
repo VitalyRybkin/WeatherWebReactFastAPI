@@ -43,10 +43,10 @@ def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
 )
 def get_forecast_by_id(
     location_id: int,
-    settings: UserSettings,
-    current: CurrentSettings,
-    hourly: HourlySettings,
-    daily: DailySettings,
+    settings: UserSettings | None = None,
+    current: CurrentSettings | None = None,
+    hourly: HourlySettings | None = None,
+    daily: DailySettings | None = None,
 ) -> dict[str, Any] | None:
     """
     Function to get forecast by ID.

@@ -68,8 +68,8 @@ class HourlySettings(WeatherSettings):
     """
 
     model_config = ConfigDict()
-    wind_extended: bool
-    pressure: bool
+    wind_extended: bool = False
+    pressure: bool = False
 
 
 class CurrentSettings(WeatherSettings):
@@ -85,8 +85,8 @@ class CurrentSettings(WeatherSettings):
 
     model_config = ConfigDict()
 
-    wind_extended: bool
-    pressure: bool
+    wind_extended: bool = False
+    pressure: bool = False
 
 
 class DailySettings(WeatherSettings):
@@ -100,7 +100,7 @@ class DailySettings(WeatherSettings):
 
     model_config = ConfigDict()
 
-    astro: bool
+    astro: bool = False
 
 
 class UserSettings(BaseModel):
