@@ -1,3 +1,7 @@
+"""
+Module. User authentication functions and classes.
+"""
+
 from datetime import timedelta, datetime, timezone
 from typing import Any, Optional
 
@@ -8,13 +12,17 @@ from fastapi.security import (
     HTTPAuthorizationCredentials,
 )
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.status import HTTP_403_FORBIDDEN
 from starlette.types import ASGIApp
 
 from .settings import settings
 from ..schemas.user_schemas import TokenInfo
 
+
 class Bearer(HTTPBearer):
+    """
+    Class. Overrides HTTPBearer behaviour - auto_error true on location_id endpoint.
+    """
+
     def __init__(self, auto_error: bool = True):
         super().__init__(auto_error=auto_error)
 
@@ -28,6 +36,7 @@ class Bearer(HTTPBearer):
         ):
             self.auto_error = False
         await super().__call__(request)
+
 
 http_bearer: HTTPBearer = Bearer()
 
@@ -83,7 +92,12 @@ def decode_jwt(
 
 async def user_auth(
     credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
-):
+) -> HTTPAuthorizationCredentials | None:
+    """
+    Function. User authentication handler.
+    :param credentials: user credentials
+    :return: auth token or none
+    """
     if credentials:
         try:
             if credentials.scheme.lower() != "bearer":
@@ -92,14 +106,17 @@ async def user_auth(
                 )
             payload = decode_jwt(token=credentials.credentials)
             return payload
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Token has expired")
-        except jwt.InvalidTokenError:
-            raise HTTPException(status_code=401, detail="Invalid token")
+        except jwt.ExpiredSignatureError as exc:
+            raise HTTPException(status_code=401, detail="Token has expired") from exc
+        except jwt.InvalidTokenError as exc:
+            raise HTTPException(status_code=401, detail="Invalid token") from exc
     return None
 
 
 class AuthResponseMiddleware(BaseHTTPMiddleware):
+    """
+    Class. Middleware to handle auth response header.
+    """
 
     def __init__(self, app: ASGIApp):
         super().__init__(app)

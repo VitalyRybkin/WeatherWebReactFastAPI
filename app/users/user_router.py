@@ -40,7 +40,7 @@ from app.users.user_controller import (
 from app.utils import to_json
 from app.utils.auth import user_auth
 from app.utils.db_engine import db_engine
-from app.utils.exeption_handler import (
+from app.utils.exception_handler import (
     DatabaseInterfaceError,
     UnauthorizedError,
     DatabaseIntegrityError,

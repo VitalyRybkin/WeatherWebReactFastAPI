@@ -36,7 +36,7 @@ from app.users.settings_controller import (
     update_user_settings,
 )
 from app.utils import db_engine, to_json
-from app.utils.exeption_handler import (
+from app.utils.exception_handler import (
     DatabaseInterfaceError,
     DatabaseIntegrityError,
     NotFoundError,
