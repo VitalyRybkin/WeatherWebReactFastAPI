@@ -3,7 +3,6 @@ Main app module - start FastAPI app.
 """
 
 from contextlib import asynccontextmanager
-from datetime import datetime
 
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException, Request
@@ -16,8 +15,7 @@ from starlette.responses import JSONResponse
 from app.api_v1.views import location_router
 from app.users.settings_router import settings_router
 from app.users.user_router import user_router
-from app.utils.auth import user_auth
-
+from app.utils.auth import user_auth, AuthResponseMiddleware
 from app.utils.db_engine import db_engine
 
 
@@ -39,9 +37,7 @@ app.include_router(user_router, tags=["users"])
 app.include_router(
     settings_router, tags=["settings"], dependencies=[Depends(user_auth)]
 )
-app.include_router(
-    location_router, tags=["locations"], dependencies=[Depends(user_auth)]
-)
+app.include_router(location_router, tags=["locations"])
 
 metrics_app = make_asgi_app()
 app.mount("/metrics", metrics_app)
@@ -54,6 +50,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(AuthResponseMiddleware)
 
 
 @app.exception_handler(HTTPException)
