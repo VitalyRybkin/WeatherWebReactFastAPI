@@ -2,12 +2,18 @@
 Module. Create pydantic app settings.
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).parent
+
+
+class LimiterOptions(BaseSettings):
+    REQUEST_LIMIT: int = 2
+    DURATION_LIMIT_SEC: int = 30
 
 
 class Loggers(BaseSettings):
@@ -60,11 +66,16 @@ class Settings(BaseSettings):
     DB_HOST: str
     API_TOKEN: str
 
+    REDIS_LOCAL_CONN: str = "redis://localhost:6379"
+    REDIS_DOCKER_CONN: str = "redis://redis:6379/0"
+
     jwt_authentication: AuthSettings = AuthSettings()
     db_settings: DBSettings = DBSettings()
 
     loggers: Loggers = Loggers()
     handlers: Handlers = Handlers()
+
+    limiter_options: LimiterOptions = LimiterOptions()
 
     @property
     def db_conn(self) -> str:

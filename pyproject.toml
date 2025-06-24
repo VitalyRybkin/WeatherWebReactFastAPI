@@ -30,6 +30,7 @@ pylint = "^3.3.7"
 python-multipart = "^0.0.20"
 pyjwt = {extras = ["crypto"], version = "<2.10"}
 locust = "^2.37.10"
+fastapi-limiter = "^0.1.6"
 
 [build-system]
 requires = ["poetry-core"]

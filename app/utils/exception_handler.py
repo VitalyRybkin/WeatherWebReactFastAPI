@@ -30,6 +30,11 @@ class UnprocessableEntityError(HTTPException):
         super().__init__(422, message, headers)
 
 
+class TooManyRequestsError(HTTPException):
+    def __init__(self, message: str, headers: dict[str, str] = None):
+        super().__init__(429, message, headers)
+
+
 class DatabaseInterfaceError(HTTPException):
     def __init__(self, message: str):
         super().__init__(500, f"Database connection error. {message}")
