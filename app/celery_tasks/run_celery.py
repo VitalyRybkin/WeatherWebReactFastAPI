@@ -1,13 +1,16 @@
 from celery import Celery
 
-# from app.utils.settings import settings
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+from app.utils.settings import settings
 
 celery_app = Celery(
     "run_tasks",
-    broker="redis://localhost:6379",
-    # broker=settings.REDIS_DOCKER_CONN,
-    # backend=settings.REDIS_DOCKER_CONN,
-    backend="redis://localhost:6379",
+    broker=settings.REDIS_LOCAL_CONN,
+    backend=settings.REDIS_LOCAL_CONN,
     include=["celery_tasks.tasks"],
     ignore_result=False,
 )
