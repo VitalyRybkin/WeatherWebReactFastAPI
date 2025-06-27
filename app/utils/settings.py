@@ -2,7 +2,6 @@
 Module. Create pydantic app settings.
 """
 
-from datetime import timedelta
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -11,17 +10,22 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = Path(__file__).parent
 
 
-class LimiterOptions(BaseSettings):
+class APIRetrySettings(BaseModel):
+    LIMIT: int = 5
+    DELAY_SEC: int = 3
+
+
+class LimiterOptions(BaseModel):
     REQUEST_LIMIT: int = 2
     DURATION_LIMIT_SEC: int = 30
 
 
-class Loggers(BaseSettings):
-    DEBUG_LOGGER: str = "DEBUG_LOGGER"
+class Loggers(BaseModel):
+    INFO_LOGGER: str = "INFO_LOGGER"
     DB_LOGGER: str = "DB_LOGGER"
 
 
-class Handlers(BaseSettings):
+class Handlers(BaseModel):
     DB_HANDLER: str = "DB_HANDLER"
     STDOUT_HANDLER: str = "STDOUT_HANDLER"
 
@@ -75,7 +79,9 @@ class Settings(BaseSettings):
     loggers: Loggers = Loggers()
     handlers: Handlers = Handlers()
 
-    limiter_options: LimiterOptions = LimiterOptions()
+    limiter: LimiterOptions = LimiterOptions()
+
+    retry: APIRetrySettings = APIRetrySettings()
 
     @property
     def db_conn(self) -> str:

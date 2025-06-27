@@ -1,7 +1,7 @@
-from celery import Celery
-
 import os
 import sys
+
+from celery import Celery
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 

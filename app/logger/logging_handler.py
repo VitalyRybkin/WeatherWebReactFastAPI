@@ -44,5 +44,5 @@ def get_logger(name) -> logging.Logger:
     return logger
 
 
-debug_logger = get_logger(settings.loggers.DEBUG_LOGGER)
+info_logger = get_logger(settings.loggers.INFO_LOGGER)
 database_logger = get_logger(settings.loggers.DB_LOGGER)

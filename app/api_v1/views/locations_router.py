@@ -30,8 +30,8 @@ security: HTTPBasic = HTTPBasic(auto_error=False)
     dependencies=[
         Depends(
             RateLimiter(
-                times=settings.limiter_options.REQUEST_LIMIT,
-                seconds=settings.limiter_options.DURATION_LIMIT_SEC,
+                times=settings.limiter.REQUEST_LIMIT,
+                seconds=settings.limiter.DURATION_LIMIT_SEC,
             )
         )
     ],
@@ -55,8 +55,8 @@ def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
         Depends(user_auth),
         Depends(
             RateLimiter(
-                times=settings.limiter_options.REQUEST_LIMIT,
-                seconds=settings.limiter_options.DURATION_LIMIT_SEC,
+                times=settings.limiter.REQUEST_LIMIT,
+                seconds=settings.limiter.DURATION_LIMIT_SEC,
             )
         ),
     ],

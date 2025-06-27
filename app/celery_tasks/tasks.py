@@ -4,30 +4,30 @@ from requests import Response
 
 from .run_celery import celery_app
 
-# from app.utils.settings import settings
 from .config import API_TOKEN as TOKEN
+
+# import os
+# import sys
+# sys.path.insert(1, os.path.join(sys.path[0], ".."))
+from app.utils.retry import RetryTask, APIRetryHandler
 
 
 @celery_app.task(name="run_tasks.location_by_name", serializer="json")
+@APIRetryHandler(max_retries=5, delay=1)
 def location_by_name(location_name) -> Any | None:
     """
     Function. Get locations by name from API.
     :param location_name: Location name string
     :return: List of locations
     """
-    try:
-        result: Response = requests.get(
-            # f"https://api.weatherapi.com/v1/search.json?key={settings.api_token}&q={location_name}&aqi=no"
-            f"https://api.weatherapi.com/v1/search.json?key={TOKEN}&q={location_name}&aqi=no"
-        )
-        return result.json()
-    except requests.exceptions.RequestException as re:
-        # logger.warning("Search location error: ", re)
-        # TODO exception logger
-        print(re)
+    result: Response = requests.get(
+        f"https://api.weatherapi.com/v1/search.json?key={TOKEN}&q={location_name}&aqi=no"
+    )
+    return result.json()
 
 
-@celery_app.task(name="run_tasks.get_forecast", serializer="json")
+@celery_app.task(name="run_tasks.get_forecast", serializer="json", base=RetryTask)
+@APIRetryHandler(max_retries=5, delay=1)
 def get_forecast(location_id: int, amount_of_days: int) -> Response | None:
     """
     Function. Get locations by id from API.
@@ -35,25 +35,16 @@ def get_forecast(location_id: int, amount_of_days: int) -> Response | None:
     :param location_id: location id integer
     :return: Location object
     """
-    try:
-        forecast_weather_result: Response = requests.get(
-            # f"https://api.weatherapi.com/v1/forecast.json?key={settings.api_token}&q=id:{location_id}&days={amount_of_days if amount_of_days > 1 else 2}&aqi=no&alerts=yes"
-            f"https://api.weatherapi.com/v1/forecast.json?key={TOKEN}&q=id:{location_id}&days={amount_of_days if amount_of_days > 1 else 2}&aqi=no&alerts=yes"
-        )
-        return forecast_weather_result.json()
-    except requests.exceptions.RequestException as re:
-        # logger.warning("Search location error: ", re)
-        print(re)
+    forecast_weather_result: Response = requests.get(
+        f"https://api.weatherapi.com/v1/forecast.json?key={TOKEN}&q=id:{location_id}&days={amount_of_days if amount_of_days > 1 else 2}&aqi=no&alerts=yes"
+    )
+    return forecast_weather_result.json()
 
 
 @celery_app.task(name="run_tasks.get_current_weather", serializer="json")
+@APIRetryHandler(max_retries=5, delay=1)
 def get_current_weather(location_id) -> Any | None:
-    try:
-        current_weather_result: Response = requests.get(
-            # f"https://api.weatherapi.com/v1/current.json?key={settings.api_token}&q=id:{location_id}&aqi=no"
-            f"https://api.weatherapi.com/v1/current.json?key={TOKEN}&q=id:{location_id}&aqi=no"
-        )
-        return current_weather_result.json()
-    except requests.exceptions.RequestException as re:
-        # logger.warning("Search location error: ", re)
-        print(re)
+    current_weather_result: Response = requests.get(
+        f"https://api.weatherapi.com/v1/current.json?key={TOKEN}&q=id:{location_id}&aqi=no"
+    )
+    return current_weather_result.json()
