@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
 from app import utils
-from app.logger.logging_handler import debug_logger
+from app.logger.logging_handler import info_logger
 from app.models import Users
 from app.schemas.error_response_schemas import (
     DBErrorMessage,
@@ -91,7 +91,7 @@ async def create_user(
 
     # TODO add email notification
 
-    debug_logger.info(msg=user_info)
+    info_logger.info(msg=user_info)
 
     return UserFullInfoPublic(user_info=user_info, user_settings=user_settings_response)
 

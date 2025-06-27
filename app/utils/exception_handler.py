@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from app.logger.logging_handler import database_logger, debug_logger
+from app.logger.logging_handler import database_logger, info_logger
 
 
 class BadRequestError(HTTPException):
@@ -22,7 +22,7 @@ class DatabaseIntegrityError(HTTPException):
     def __init__(self, message: str, headers: dict[str, str] = None):
         super().__init__(409, message, headers)
         database_logger.error(message)
-        debug_logger.error(message)
+        info_logger.error(message)
 
 
 class UnprocessableEntityError(HTTPException):

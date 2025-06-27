@@ -46,7 +46,7 @@ def get_logging_config() -> Dict[str, Any]:
             },
         },
         "loggers": {
-            settings.loggers.DEBUG_LOGGER: {
+            settings.loggers.INFO_LOGGER: {
                 "handlers": [
                     settings.handlers.STDOUT_HANDLER,
                 ],
