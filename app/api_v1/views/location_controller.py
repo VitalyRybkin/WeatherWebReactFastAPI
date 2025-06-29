@@ -2,8 +2,12 @@
 Module. Get data from DB and API and prepare it to be passed to the router.
 """
 
+import json
 from datetime import datetime
 from typing import Any, List, Dict
+
+import redis
+from redis import Redis
 
 from app.celery_tasks.tasks import location_by_name, get_forecast
 from app.schemas.setting_schemas import (
@@ -30,6 +34,7 @@ from app.schemas.weather_schemas import (
     HourlyForecastPublic,
     Conditions,
 )
+from app.utils import settings
 
 
 def get_locations(location_name: str) -> List[LocationPublic]:
@@ -59,9 +64,24 @@ def get_location_weather(
     :param current_settings: current weather user settings
     :return: current weather data
     """
+    current_datetime = datetime.now()
+    time_to: int = 30 if current_datetime.minute < 30 else 60
 
-    weather_forecast = get_forecast.apply_async(args=[location_id, user_settings.daily])
-    location_weather: Dict[str, Any] = weather_forecast.get()
+    expiration_time: int = (time_to - current_datetime.minute) * 60
+
+    redis_client: Redis = redis.Redis(host=settings.REDIS_LOCALHOST)
+
+    if redis_client.get(str(location_id)):
+        location_weather: Dict[str, Any] = json.loads(
+            redis_client.get(str(location_id))
+        )
+    else:
+        weather_forecast = get_forecast.apply_async(
+            args=[location_id, user_settings.daily]
+        )
+        location_weather: Dict[str, Any] = weather_forecast.get()
+        redis_client.set(str(location_id), json.dumps(location_weather))
+        redis_client.expire(str(location_id), expiration_time)
 
     location_weather_response: dict[str, Location | CurrentWeatherPublic | Dict] = {}
     location_weather_response.update(location=Location(**location_weather["location"]))
