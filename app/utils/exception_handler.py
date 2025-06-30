@@ -39,5 +39,5 @@ class TooManyRequestsError(HTTPException):
 
 class DatabaseInterfaceError(HTTPException):
     def __init__(self, message: str):
-        super().__init__(500, f"Database connection error. {message}")
-        database_logger.exception("Database connection error.")
+        super().__init__(500, f"Database interface error. {message}")
+        database_logger.error("Database interface error.")

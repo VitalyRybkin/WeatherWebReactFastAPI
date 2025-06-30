@@ -92,9 +92,7 @@ async def add_new_user_location(
     )
 
     if user_info is InterfaceError:
-        raise DatabaseInterfaceError(
-            message="User location could not be added or changed."
-        )
+        raise DatabaseInterfaceError("User location could not be added or changed.")
 
     if isinstance(user_info, IntegrityError):
         raise DatabaseIntegrityError(
@@ -186,7 +184,7 @@ async def remove_user_location(
         raise NotFoundError("User not found.")
 
     if user_locations is InterfaceError:
-        raise DatabaseInterfaceError(message="User location cannot be removed.")
+        raise DatabaseInterfaceError("User location cannot be removed.")
 
     return [LocationPublic(**to_json(location)) for location in user_locations.wishlist]
 
