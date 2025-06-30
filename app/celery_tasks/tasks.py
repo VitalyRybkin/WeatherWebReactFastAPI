@@ -26,7 +26,7 @@ def location_by_name(location_name) -> Any | None:
     return result.json()
 
 
-@celery_app.task(name="run_tasks.get_forecast", serializer="json", base=RetryTask)
+@celery_app.task(name="run_tasks.get_forecast", serializer="json")
 @APIRetryHandler(max_retries=5, delay=1)
 def get_forecast(location_id: int, amount_of_days: int) -> Response | None:
     """
