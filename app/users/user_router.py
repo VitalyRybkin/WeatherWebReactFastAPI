@@ -80,7 +80,9 @@ async def create_user(
     )
 
     if isinstance(new_user, IntegrityError):
-        raise DatabaseIntegrityError("User already exists.")
+        raise DatabaseIntegrityError(
+            "User already exists.", {"X-Custom-Error-Header": "USER_EXISTS"}
+        )
 
     if isinstance(new_user, InterfaceError):
         raise DatabaseInterfaceError("User could not be created.")
@@ -228,10 +230,7 @@ async def link_account(
         raise DatabaseInterfaceError("Accounts could not be linked.")
 
     if account_linked is None:
-        raise NotFoundError(
-            "Bot user not found.",
-            {"X-Error-Code": "USER_NOT_FOUND"},
-        )
+        raise NotFoundError("Bot user not found.")
 
     return Ok(success=True, message="Accounts linked.")
 

@@ -14,8 +14,10 @@ class UnauthorizedError(HTTPException):
 
 
 class NotFoundError(HTTPException):
-    def __init__(self, message: str, headers: dict[str, str] = None):
-        super().__init__(404, message, headers)
+    def __init__(self, message: str):
+        super().__init__(
+            404, message, headers={"X-Custom-Error-Header": "USER_NOT_FOUND"}
+        )
 
 
 class DatabaseIntegrityError(HTTPException):

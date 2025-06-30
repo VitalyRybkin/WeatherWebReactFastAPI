@@ -103,7 +103,7 @@ async def add_new_user_location(
                 if target == "wishlist"
                 else "User location already set."
             ),
-            {"X-Error-Code": "LOCATION_EXISTS"},
+            {"X-Custom-Error-Header": "LOCATION_EXISTS"},
         )
 
     if target == "wishlist" and user_info.wishlist:
@@ -141,7 +141,7 @@ async def change_user_location(
     )
 
     if user_info is None:
-        raise NotFoundError("User not found.", {"X-Error-Code": "USER_NOT_FOUND"})
+        raise NotFoundError("User not found.")
 
     if user_info is InterfaceError:
         raise DatabaseInterfaceError(
@@ -183,7 +183,7 @@ async def remove_user_location(
     )
 
     if user_locations is None:
-        raise NotFoundError("User not found.", {"X-Error-Code": "USER_NOT_FOUND"})
+        raise NotFoundError("User not found.")
 
     if user_locations is InterfaceError:
         raise DatabaseInterfaceError(message="User location cannot be removed.")

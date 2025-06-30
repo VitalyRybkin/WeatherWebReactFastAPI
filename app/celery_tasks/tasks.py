@@ -6,9 +6,6 @@ from .run_celery import celery_app
 
 from .config import API_TOKEN as TOKEN
 
-# import os
-# import sys
-# sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from app.utils.retry import RetryTask, APIRetryHandler
 
 
