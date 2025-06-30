@@ -2,9 +2,14 @@
 Module. Get data from DB and API and prepare it to be passed to the router.
 """
 
+import json
 from datetime import datetime
 from typing import Any, List, Dict
 
+import redis
+from redis import Redis
+
+from app import redis_client
 from app.celery_tasks.tasks import location_by_name, get_forecast
 from app.schemas.setting_schemas import (
     LocationPublic,
@@ -30,6 +35,7 @@ from app.schemas.weather_schemas import (
     HourlyForecastPublic,
     Conditions,
 )
+from app.utils import settings
 
 
 def get_locations(location_name: str) -> List[LocationPublic]:
@@ -51,7 +57,7 @@ def get_location_weather(
     user_settings: UserSettings,
 ) -> Dict[str, Any] | None:
     """
-    Function. Fetch weather data for a given location bsed on user settings.
+    Function. Fetch weather data for a given location based on user settings.
     :param user_settings: User settings.
     :param hourly_settings: Hourly user settings
     :param daily_settings: daily user settings
@@ -60,8 +66,21 @@ def get_location_weather(
     :return: current weather data
     """
 
-    weather_forecast = get_forecast.apply_async(args=[location_id, user_settings.daily])
-    location_weather: Dict[str, Any] = weather_forecast.get()
+    if redis_client.get(str(location_id)):
+        location_weather: Dict[str, Any] = json.loads(
+            redis_client.get(str(location_id))
+        )
+    else:
+        weather_forecast = get_forecast.apply_async(
+            args=[location_id, user_settings.daily]
+        )
+        location_weather: Dict[str, Any] = weather_forecast.get()
+        redis_client.set(str(location_id), json.dumps(location_weather))
+
+        current_datetime = datetime.now()
+        time_upper_bound: int = 30 if current_datetime.minute < 30 else 60
+        expiration_time: int = (time_upper_bound - current_datetime.minute) * 60
+        redis_client.expire(str(location_id), expiration_time)
 
     location_weather_response: dict[str, Location | CurrentWeatherPublic | Dict] = {}
     location_weather_response.update(location=Location(**location_weather["location"]))

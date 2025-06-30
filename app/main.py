@@ -11,6 +11,7 @@ from fastapi.responses import ORJSONResponse
 from fastapi_limiter import FastAPILimiter
 from prometheus_client import make_asgi_app
 from prometheus_fastapi_instrumentator import Instrumentator
+from redis import Redis
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
@@ -45,6 +46,8 @@ async def lifespan(app: FastAPI):  # pylint: disable=W0613, W0621
 
 
 app = FastAPI(lifespan=lifespan, root_path="/app", response_class=ORJSONResponse)
+
+
 app.include_router(user_router, tags=["users"])
 app.include_router(
     settings_router, tags=["settings"], dependencies=[Depends(user_auth)]
@@ -67,8 +70,8 @@ app.add_middleware(AuthResponseMiddleware)
 
 
 @app.exception_handler(HTTPException)
-async def enhanced_error_handler(request: Request, exc: HTTPException):
-    return JSONResponse(
+async def error_handler(request: Request, exc: HTTPException):
+    return ORJSONResponse(
         status_code=exc.status_code,
         content={
             "detail": exc.detail,
