@@ -76,7 +76,7 @@ services:
       - LOCUSTFILE
     volumes:
       - ./locust/:/mnt/locust
-    command: -f /mnt/locust/${LOCUSTFILE}.py --master -H http://fastapi-app:8000
+    command: -f /mnt/locust/${LOCUSTFILE} --master -H http://fastapi-app:8000
     networks:
       - monitor-net
 

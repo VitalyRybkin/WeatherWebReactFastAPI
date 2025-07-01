@@ -9,8 +9,8 @@ from app.utils.settings import settings
 
 celery_app = Celery(
     "run_tasks",
-    broker=settings.REDIS_LOCAL_CONN,
-    backend=settings.REDIS_LOCAL_CONN,
+    broker=settings.REDIS_DOCKER_CONN,
+    backend=settings.REDIS_DOCKER_CONN,
     include=["celery_tasks.tasks"],
     ignore_result=False,
 )

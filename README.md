@@ -1,50 +1,254 @@
-Управление Базой Данных:
 
-Пул Соединений: Используйте пул соединений (например, через SQLAlchemy) для эффективного управления подключениями к PostgreSQL. Это уменьшит задержки при частых обращениях к БД.
+# 🚀 FastAPI Microservice Template
 
-Оптимизация Запросов: Убедитесь, что ваши запросы к БД оптимизированы, индексы настроены правильно, чтобы минимизировать время выполнения.
+A production-ready FastAPI weather microservice template featuring:
 
-Кэширование:
+* ✅ FastAPI with Pydantic for validation
+* 🐘 PostgreSQL + SQLAlchemy ORM
+* 🔄 Alembic migrations
+* 🧪 Locust for load testing
+* 📊 Prometheus + Grafana + Loki for monitoring and observability
+* 🧠 Redis for caching and task queuing
+* 📦 Docker for containerization
+* 🔐 FastAPI Limiter for rate limiting
+* 🧵 Celery with retry logic for background tasks
+* 📘 Structured logging
+* 📚 Poetry for dependency management and packaging
 
-Redis или Memcached: Внедрение кэширования может значительно снизить количество запросов к внешнему API и базе данных. Например, часто запрашиваемые погодные данные можно кэшировать на определённое время.
+---
 
-Очереди Задач:
+## 📁 Project Structure
 
-Celery: Для выполнения долгих или ресурсоёмких задач (например, обращение к внешнему API) используйте очередь задач Celery. Это позволит обрабатывать такие задачи асинхронно, не блокируя основной поток приложения.
+```
+.
+├── app/
+│   └── api_v1/             # FastAPI main routes
+│       └── views/
+│   ├── celery_tasks/       # Celery configuration, start and tasks
+│   ├── logger/             # Logger configuration and handker
+│   ├── logs/               # Logging directory
+│   ├── models/             # Database models
+│   ├── schemas/            # Pydentic schemas
+│   ├── users/              # Users routes
+│   ├── utils/              # User authentication, settings, exeption handlers, API limiter, retry logic, database connection
+│   ├── main.py             # FastAPI entrypoint
+│   ├── README.md
+│   └── .env 
+├── alembic/                # DB migrations
+├── alembic.ini             # ALembic configuration
+├── compose.locust.yaml     # Services orchestration for load testing
+├── docker-compose.yml      # Services orchestration
+├── Dockerfile              # App Dockerfile
+├── poetry.lock             # Project depencies
+├── pyproject.toml          # Project metadata
+└── README.md
+```
 
-Ограничение Скорости (Rate Limiting):
+---
 
-Flask-Limiter: Реализуйте ограничение количества запросов от одного пользователя или IP за определённый промежуток времени. Это защитит ваше приложение от перегрузок и злоупотреблений.
+## ⚙️ Tech Stack
 
-Обработка Ошибок и Повторные Попытки:
+| Tool                | Purpose                       |
+| ------------------- |-------------------------------|
+| **FastAPI**         | Web framework                 |
+| **Pydantic**        | Data validation and settings  |
+| **PostgreSQL**      | Relational database           |
+| **SQLAlchemy**      | ORM for PostgreSQL            |
+| **Alembic**         | Database migrations           |
+| **Celery**          | Background task processing    |
+| **Redis**           | Broker for Celery and caching |
+| **Locust**          | Load testing                  |
+| **Prometheus**      | Metrics scraping              |
+| **Grafana**         | Metrics dashboards            |
+| **Loki**            | Log aggregation               |
+| **Docker**          | Containerization              |
+| **FastAPI Limiter** | IP-based rate limiting        |
 
-Retry Logic: При обращении к внешним API реализуйте логику повторных попыток на случай временных сбоев.
+---
 
-Обработка Исключений: Грамотно обрабатывайте возможные ошибки при работе с БД и API, чтобы приложение оставалось стабильным.
+## 🛠️ Setup & Development
 
-Мониторинг и Логирование:
+### 1. Clone the Repository
 
-Инструменты Мониторинга: Используйте инструменты вроде Prometheus или Grafana для мониторинга производительности приложения.
+```bash
+git clone https://github.com/VitalyRybkin/WeatherWebReactFastAPI.git
+cd WeatherWebReactFastAPI
+```
 
-Логирование: Внедрите централизованное логирование (например, с помощью ELK Stack), чтобы отслеживать и анализировать поведение приложения под нагрузкой.
+### 2. Environment Configuration
 
-Тестирование Масштабируемости:
+Create a `.env` file:
 
-Стресс-Тесты: Проведите нагрузочные тесты с помощью инструментов вроде JMeter или Locust, чтобы оценить, как ваше приложение справляется с высоким трафиком и выявить узкие места.
+```env
+DB_NAME=
+DB_USERNAME=
+DB_PASSWORD=
+DB_HOST=
+API_TOKEN=
+```
+### 5. Install Poetry & Dependencies
+Set localhost or docker host option for:
 
+* Redis - app/main/__init__.py
+```aiignore
+redis_client: Redis = redis.Redis(host=settings.REDIS_LOCALHOST)
+```
+* Celery - app/celery_tasks/run_celery.py
+```aiignore
+broker=settings.REDIS_LOCAL_CONN,
+backend=settings.REDIS_LOCAL_CONN,
+```
 
-pip3 install --upgrade --force-reinstall asyncpg
+### 4. Install Poetry & Dependencies
 
-pip3 install --upgrade --force-reinstall pydantic-core
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+poetry install
+```
 
-export PATH="$(brew --prefix python)/libexec/bin:$PATH"
+### 5. Start with Docker
 
-error: invalid object 100644 b2ca6a051f1fa9272ffb6dc432e4963743d820ff for 'models/users.py'
-git hash-object -w models/users.py 
+```bash
+docker-compose up --build
+```
 
+---
+## 📦 Dependency Management
+To add a new package:
+```bash
+poetry add fastapi
+poetry add --dev black
+```
+To export for other formats:
+```bash
+poetry export --format requirements.txt --output requirements.txt
+```
+---
+## 🔄 Database Migrations (Alembic)
+
+```bash
+# Generate migration
+alembic revision --autogenerate -m "Add user table"
+
+# Apply migration
+alembic upgrade head
+```
+
+---
+
+## 🧵 Background Tasks (Celery)
+
+Run the Celery worker for local running:
+
+```bash
+cd app/
 celery -A celery_tasks.run_celery worker -E --loglevel INFO
+```
+
+---
+
+## 🚦 Rate Limiting (FastAPI Limiter)
+
+Example usage:
+
+```python
+@location_router.get(
+    "/name/{location_name}/",
+    summary="Get location / list of locations by name.",
+    dependencies=[
+        Depends(
+            RateLimiter(
+                times=settings.limiter.REQUEST_LIMIT,
+                seconds=settings.limiter.DURATION_LIMIT_SEC,
+            )
+        )
+    ],
+    response_model=List[LocationPublic],
+)
+def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
+    locations_found: List[LocationPublic] = get_locations(location_name)
+
+    return locations_found
+```
+
+---
+
+## 📈 Monitoring
+
+Prometheus scrapes `/metrics`. Grafana visualizes Prometheus + Loki logs.
 
 
-strftime("%z", gmtime())
+* Grafana: `http://localhost:3000`
+* Prometheus: `http://localhost:9090`
+* Loki: `http://localhost:3100`
 
-time.tzname
+---
+
+## 📊 Load Testing with Locust
+
+```bash
+LOCUSTFILE={file_name} docker compose -f compose.locust.yaml up --build 
+```
+
+Open: `http://localhost:8089`
+
+---
+
+## 📦 Logging
+
+Structured logging with timestamps, level, and source:
+
+```python
+
+import logging.config
+
+def get_logger(name) -> logging.Logger:
+    """
+    Function. Creates a logger instance.
+    :return: logger instance
+    """
+    logger = logging.getLogger(name)
+    """ logic """
+    return logger
+```
+
+Logs are streamed to Loki for centralized access.
+
+---
+
+## 🧪 Example API Call
+
+```bash
+curl http://localhost:8000/
+curl -X 'GET' 'http://127.0.0.1:8000/app/api_v1/name/NY/' -H 'accept: application/json'
+```
+
+---
+
+## 📚 Useful Commands
+
+| Action                      | Command                                 |
+| --------------------------- | --------------------------------------- |
+| Run migrations              | `alembic upgrade head`                  |
+| Create new migration        | `alembic revision --autogenerate -m ""` |
+| Start Celery worker         | `celery -A app.tasks.celery_app worker` |
+| Run app locally (no Docker) | `uvicorn app.main:app --reload`         |
+
+---
+
+## 🧼 Lint & Format
+
+```bash
+black .
+pylint .
+```
+
+---
+
+## ✅ Todo / Extensible Features
+
+* ✅ User registration Email notification
+* ✅ Email confirmation
+* ⏳ CI/CD Actions
+
+---
