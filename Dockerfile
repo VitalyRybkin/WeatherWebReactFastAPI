@@ -26,5 +26,5 @@ COPY poetry.lock pyproject.toml /code/
 RUN poetry install $(test "$PROJECT_ENV" == production && echo "--only=main") --no-interaction --no-ansi --no-root
 
 COPY ./app /code/app
-COPY ./app/.env /code/app
+
 

@@ -1,9 +1,10 @@
-#version: '3'
 services:
   fastapi-app:
     build:
      context: .
     image: fastapi_app
+    env_file:
+      - path: ./.env
     restart: unless-stopped
     working_dir: /code
     ports:
@@ -38,6 +39,8 @@ services:
     build:
       context: .
     image: fastapi_celery
+    env_file:
+      - path: ./.env
     working_dir: /code/app
     restart: unless-stopped
     command: celery -A celery_tasks.run_celery worker -E --loglevel INFO

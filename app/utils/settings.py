@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     API_TOKEN: str
 
     REDIS_LOCALHOST: str = "localhost"
-    REDIS_DOCKER_HOST: str = "redis"
+    REDIS_DOCKERHOST: str = "redis"
     REDIS_LOCAL_CONN: str = "redis://localhost:6379"
     REDIS_DOCKER_CONN: str = "redis://redis:6379/0"
 
