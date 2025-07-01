@@ -93,6 +93,12 @@ Set localhost or docker host option for:
 ```aiignore
 redis_client: Redis = redis.Redis(host=settings.REDIS_LOCALHOST)
 ```
+* Redis - app/main.py
+```aiignore
+redis_connection = redis.from_url(
+        settings.REDIS_LOCAL_CONN, encoding="utf-8", decode_responses=True
+    )
+```
 * Celery - app/celery_tasks/run_celery.py
 ```aiignore
 broker=settings.REDIS_LOCAL_CONN,
@@ -109,7 +115,8 @@ poetry install
 ### 5. Start with Docker
 
 ```bash
-docker-compose up --build
+docker compose build
+docker compose --env-file .env up
 ```
 
 ---
@@ -167,7 +174,6 @@ Example usage:
 )
 def get_location_by_name(location_name: str) -> list[LocationPublic] | None:
     locations_found: List[LocationPublic] = get_locations(location_name)
-
     return locations_found
 ```
 
@@ -227,12 +233,14 @@ curl -X 'GET' 'http://127.0.0.1:8000/app/api_v1/name/NY/' -H 'accept: applicatio
 
 ## 📚 Useful Commands
 
-| Action                      | Command                                 |
-| --------------------------- | --------------------------------------- |
-| Run migrations              | `alembic upgrade head`                  |
-| Create new migration        | `alembic revision --autogenerate -m ""` |
-| Start Celery worker         | `celery -A app.tasks.celery_app worker` |
-| Run app locally (no Docker) | `uvicorn app.main:app --reload`         |
+| Action                      | Command                                                                   |
+|-----------------------------|---------------------------------------------------------------------------|
+| Run migrations              | `alembic upgrade head`                                                    |
+| Create new migration        | `alembic revision --autogenerate -m ""`                                   |
+| Start Celery worker locally | `celery -A celery_tasks.run_celery worker -E --loglevel INFO`             |
+| Run app locally (no Docker) | `uvicorn app.main:app --host 0.0.0.0 --port 8000`                         |
+| Run app in Docker           | `docker compose --env-file .env up`                                       |
+| Run app load test in Docker | `LOCUSTFILE={file_name} docker compose -f compose.locust.yaml up --build` |
 
 ---
 
