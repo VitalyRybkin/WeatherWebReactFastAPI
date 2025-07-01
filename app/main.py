@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):  # pylint: disable=W0613, W0621
     # async with db_engine.engine.begin() as conn:
     #     await conn.run_sync(AbstractBaseModel.metadata.drop_all)
     redis_connection = redis.from_url(
-        settings.REDIS_DOCKER_CONN, encoding="utf-8", decode_responses=True
+        settings.REDIS_LOCAL_CONN, encoding="utf-8", decode_responses=True
     )
     await FastAPILimiter.init(
         redis=redis_connection,

@@ -66,7 +66,7 @@ user_router = APIRouter(prefix="/users", tags=["users"])
     },
 )
 async def create_user(
-    new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency)
+    new_user: UserCreate, session: AsyncSession = Depends(db_engine.session_dependency) # type: ignore
 ) -> JSONResponse | UserFullInfoPublic:
     """
     Function. Creates a new user.
@@ -115,8 +115,8 @@ async def create_user(
 )
 async def login(
     response: Response,
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(db_engine.session_dependency),
+    form_data: OAuth2PasswordRequestForm = Depends(), # type: ignore
+    session: AsyncSession = Depends(db_engine.session_dependency), # type: ignore
 ) -> JSONResponse | LoggedUserPublic:
     """
     Function. Logs a user in.
@@ -211,7 +211,7 @@ async def get_settings_dict(logged_user) -> dict[str, Any]:
 )
 async def link_account(
     user_link_info: UserAccountsLink,
-    session: AsyncSession = Depends(db_engine.session_dependency),
+    session: AsyncSession = Depends(db_engine.session_dependency), # type: ignore
 ) -> Ok:
     """
     Function. Links web and telegram accounts.
@@ -222,7 +222,7 @@ async def link_account(
 
     # TODO what if already linked
     # TODO verify bot account to be linked
-    account_linked: Users | None = await linking_accounts(
+    account_linked: Users | InterfaceError | None = await linking_accounts(
         user=user_link_info, session=session
     )
 
@@ -255,7 +255,7 @@ async def link_account(
 )
 async def update_user_password(
     user: UserChangePassword,
-    session: AsyncSession = Depends(db_engine.session_dependency),
+    session: AsyncSession = Depends(db_engine.session_dependency), # type: ignore
 ) -> Ok:
     """
     Function. Changes user password.

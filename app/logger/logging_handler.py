@@ -35,11 +35,14 @@ def get_logger(name) -> logging.Logger:
     logger_config = get_logging_config()
     logging.config.dictConfig(logger_config)
 
-    handler: Handler = logging.getHandlerByName(settings.handlers.DB_HANDLER)
-    handler.setFormatter(NoTracebackFormatter())
+
+    handler: Handler | None = logging.getHandlerByName(settings.handlers.DB_HANDLER)
+    if handler is not None:
+        handler.setFormatter(NoTracebackFormatter())
 
     handler = logging.getHandlerByName(settings.handlers.STDOUT_HANDLER)
-    handler.setFormatter(StandardDebugFormatter())
+    if handler is not None:
+        handler.setFormatter(StandardDebugFormatter())
 
     return logger
 

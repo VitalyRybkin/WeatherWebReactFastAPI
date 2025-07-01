@@ -72,9 +72,9 @@ def get_location_weather(
         )
     else:
         weather_forecast = get_forecast.apply_async(
-            args=[location_id, user_settings.daily]
+            args=(location_id, user_settings.daily)
         )
-        location_weather: Dict[str, Any] = weather_forecast.get()
+        location_weather = weather_forecast.get()
         redis_client.set(str(location_id), json.dumps(location_weather))
 
         current_datetime = datetime.now()
